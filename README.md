@@ -7,8 +7,8 @@ L ⟶ M | \epsilon <br>
 Rules: <br>
 1. M ⟶ x <br>
 2. M ⟶ ( N ) <br>
-3. N -> \lambda x . M <br>
-4. N -> M L <br>
+3. N ⟶ \lambda x . M <br>
+4. N ⟶ M L <br>
 5. L ⟶ M <br>
 6. L ⟶ \epsilon <br>
 
