@@ -21,6 +21,6 @@ FOLLOW() = {)} <br>
 
 | | x | ( | ) | \lambda |
 | --- | --- | --- | --- | --- |
-| M | M ⟶ x | M ⟶ ( N ) | | |
-| N | N ⟶ M L | N ⟶ M L | | N ⟶ \lambda x . M
-| L | L ⟶M | L ⟶ M | L ⟶ \epsilon | |
+| M | 1 | 2 | | |
+| N | 4 | 4 | | 3
+| L | 5 | 5 | 6 | |
