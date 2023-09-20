@@ -1,6 +1,8 @@
 #include "parser.h"
 #include <map>
 #include <stack>
+#include <string>
+#include <vector>
 
 enum Symbols {
 	// the symbols:
@@ -20,9 +22,9 @@ enum Symbols {
 	NTS_L		// L
 };
 
-int Parser(string expr){
-  map< Symbols, map<Symbols, int> > ParsingTable;
-  stack<Symbols> SymbolStack;
+int Parser(std::string expr){
+  std::map< Symbols, std::map<Symbols, int> > ParsingTable;
+  std::stack<Symbols> SymbolStack;
   SymbolStack.push(TS_EOS);
   SymbolStack.push(NTS_M);
 
@@ -34,7 +36,22 @@ int Parser(string expr){
   ParsingTable[NTS_L][TS_VAR] = 5;
   ParsingTable[NTS_L][TS_L_PARENS] = 5;
   ParsingTable[NTS_L][TS_R_PARENS] = 6;
-  
+
+  std::vector<std::string> tokens;
+  std::string token;
+  for(char ch : expr) {
+    if(isspace(ch)) continue; // ignore whitespace
+    if(ch == '(' || ch == ')' || ch == '.' || ch == '\\') {
+      if(!token.empty()) {
+        tokens.push_back(token);
+        token.clear();
+      }
+      tokens.push_back(std::string(1, ch));
+    } else {
+      token += ch;
+    }
+  }
+
   while(SymbolStack.size() > 0){
     
   }
