@@ -2,8 +2,6 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <cctype>
-
 
 int main() {
     std::cout << "Enter lambda expressions to parse, one per line. Press enter on an empty line to finish.\n";
