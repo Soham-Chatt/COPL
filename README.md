@@ -26,9 +26,9 @@ FOLLOW() = {)} <br>
 | L | 5 | 5 | 6 | |
 
 Rules: <br>
-1. E -> (E E) <br>
-2. E -> var <br>
-3. E -> \lambda var . E <br>
+1. E -> var <br>
+2. E -> \lambda var . E <br>
+3. E -> (E E) <br>
 
 | | var | ( | \lambda |
 | --- | --- | --- | --- |
