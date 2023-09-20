@@ -6,12 +6,17 @@
 class Node {
 public:
     virtual ~Node() = default;
+    virtual std::string to_string() const = 0; // Virtual function to be overridden by subclasses
 };
 
 class VariableNode : public Node {
 public:
     std::string name;
     VariableNode(const std::string& name) : name(name) {}
+
+    std::string to_string() const override {
+        return name;
+    }
 };
 
 class LambdaNode : public Node {
@@ -19,6 +24,14 @@ public:
     std::string param;
     Node* body;
     LambdaNode(const std::string& param, Node* body) : param(param), body(body) {}
+
+    std::string to_string() const override {
+        return "\\" + param + "." + body->to_string();
+    }
+
+    ~LambdaNode() {
+        delete body;
+    }
 };
 
 class ApplicationNode : public Node {
@@ -26,7 +39,17 @@ public:
     Node* left;
     Node* right;
     ApplicationNode(Node* left, Node* right) : left(left), right(right) {}
+
+    std::string to_string() const override {
+        return "(" + left->to_string() + " " + right->to_string() + ")";
+    }
+
+    ~ApplicationNode() {
+        delete left;
+        delete right;
+    }
 };
+
 
 class Parser {
 private:
@@ -172,8 +195,11 @@ int main() {
     Parser parser;
     Node* ast = parser.parse(input);
 
-    // Print the AST
+    // Print the tree
     print_tree(ast);
+
+    // Print the unambiguous string representation of the AST
+    std::cout << "Result: " << ast->to_string() << '\n';
 
     delete ast;
     return 0;
