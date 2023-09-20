@@ -12,6 +12,8 @@ and have implemented **should** and **may** rules where possible.
 ## Program Explanation
 This is a C++ program that implements a parser for lambda calculus expressions. Below is a brief overview of the program structure:
 
+
+
 ### Classes and Methods
 
 #### `Node` Class
