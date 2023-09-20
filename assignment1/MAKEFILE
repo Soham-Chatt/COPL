@@ -2,7 +2,7 @@ CC = g++
 
 CompileParms = -c -Wall -std=c++11 -O2
 
-OBJS = main.o
+OBJS = main.o parser.o
 
 all: main
 
@@ -12,8 +12,11 @@ run: main
 main: $(OBJS)
 	$(CC) -o main $(OBJS)
 
-main.o: main.cc
+main.o: main.cc parser.h
 	$(CC) $(CompileParms) main.cc
+
+parser.o: parser.cc parser.h
+	$(CC) $(CompileParms) parser.cc
 
 clean:
 	rm -f *.o main
