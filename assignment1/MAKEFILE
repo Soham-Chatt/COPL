@@ -6,8 +6,14 @@ OBJS = main.o
 
 all: main
 
+run: main
+	./main
+
 main: $(OBJS)
 	$(CC) -o main $(OBJS)
 
 main.o: main.cc
 	$(CC) $(CompileParms) main.cc
+
+clean:
+	rm -f *.o main
