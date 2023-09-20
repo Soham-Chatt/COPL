@@ -70,34 +70,45 @@ Node* Parser::parse_expression() {
     return node;
 }
 
+bool is_lambda_char(char ch) {
+    return ch == '\\';
+}
+
+bool is_variable_start_char(char ch) {
+    return std::isalpha(ch);
+}
+
+bool is_open_bracket(char ch) {
+    return ch == '(';
+}
+
 Node* Parser::parse_atom() {
     skip_whitespace();
 
-    // Lambda expression
-    if (current_char() == '\\') {
+    char ch = current_char();
+    if (is_lambda_char(ch)) {
         return parse_lambda();
     }
-        // Bracket means nested expression so continue and parse the nested expression
-    else if (current_char() == '(') {
+    else if (is_open_bracket(ch)) {
         ++pos;
         Node* node = parse_expression();
         skip_whitespace();
-        // End of nested expression so skip the bracket and return the node
         if (current_char() == ')') {
             ++pos;
             return node;
         }
-            // Mismatched brackets
         else {
             throw std::runtime_error("Expected ')'");
         }
     }
-        // Variable
+    else if (is_variable_start_char(ch)) {
+        return new VariableNode{parse_variable()};
+    }
     else {
-        return new VariableNode{parse_variable()
-        };
+        throw std::runtime_error("Unexpected character encountered");
     }
 }
+
 
 Node* Parser::parse_lambda() {
     ++pos; // Skip the '\' character
