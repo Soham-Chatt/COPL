@@ -122,11 +122,9 @@ private:
         skip_whitespace();
         if (current_char() == '.') {
             ++pos; // Skip the '.' character
-            Node* body = parse_expression(); // Parse the body of the lambda
-            return new LambdaNode{param, body};
-        } else {
-            throw std::runtime_error("Expected '.'");
         }
+        Node* body = parse_expression(); // Parse the body of the lambda
+        return new LambdaNode{param, body};
     }
 
 public:
