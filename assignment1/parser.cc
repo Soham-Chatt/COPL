@@ -2,6 +2,7 @@
 #include <map>
 #include <stack>
 #include <string>
+#include <cctype>
 #include <vector>
 
 enum Symbols {
@@ -12,19 +13,43 @@ enum Symbols {
 	TS_VAR,		// var (eg. x)
 	TS_POINT,	// .
 	TS_LAMBDA,	// \lambda
-	TS_EPSILON, 	// \epsilon
 	TS_EOS,		// $, in this case corresponds to '\0'
 	TS_INVALID,	// invalid token
 
 	// Non-terminal symbols:
-	NTS_M,		// S
-	NTS_N,		// F
+	NTS_M,		// M
+	NTS_N,		// N
 	NTS_L		// L
 };
 
-int Parser(std::string expr){
+Symbols lexer(std::string c){
+  if(c == "("){
+    return TS_L_PARENS;
+  }
+  else if(c == ")"){
+    return TS_R_PARENS;
+  }
+  else if(isalpha(c[0])){
+    return TS_VAR;
+  }
+  else if(c == "+"){
+    return TS_POINT;
+  }
+  else if(c == "\\"){
+    return TS_LAMBDA;
+  }
+  else if(c == "$"){
+    return TS_EOS;
+  } else {
+    return TS_INVALID;
+  }
+}
+
+bool Parser(std::string expr){
   std::map< Symbols, std::map<Symbols, int> > ParsingTable;
   std::stack<Symbols> SymbolStack;
+  std::vector<std::string> tokens;
+  
   SymbolStack.push(TS_EOS);
   SymbolStack.push(NTS_M);
 
@@ -37,22 +62,63 @@ int Parser(std::string expr){
   ParsingTable[NTS_L][TS_L_PARENS] = 5;
   ParsingTable[NTS_L][TS_R_PARENS] = 6;
 
-  std::vector<std::string> tokens;
-  std::string token;
-  for(char ch : expr) {
-    if(isspace(ch)) continue; // ignore whitespace
-    if(ch == '(' || ch == ')' || ch == '.' || ch == '\\') {
-      if(!token.empty()) {
-        tokens.push_back(token);
-        token.clear();
-      }
-      tokens.push_back(std::string(1, ch));
-    } else {
-      token += ch;
+  for(size_t i = 0; i < expr.length(); i++){
+    if(expr[i] == ' '){
+      continue;
+    }
+    else{
+      std::string temp = "";
+      while(expr[i] != ' ' && i < expr.length()){
+	temp += expr[i];
+	i++;
+			}
+      tokens.push_back(temp);
     }
   }
-
+  
+  int pos(0);
   while(SymbolStack.size() > 0){
-    
+    if(lexer(tokens[pos]) == SymbolStack.top()){
+      std::cout << "Matched symbols: " << lexer(tokens[pos]) << std::endl;
+      pos++;
+      SymbolStack.pop();
+    } else {
+      std::cout << "Rule " << ParsingTable[SymbolStack.top()][lexer(tokens[pos])] << std::endl;
+      switch (ParsingTable[SymbolStack.top()][lexer(tokens[pos])]){
+      case 1:
+	SymbolStack.pop();
+	SymbolStack.push(TS_VAR);
+	break;
+      case 2:
+	SymbolStack.pop();
+	SymbolStack.push(TS_L_PARENS);
+	SymbolStack.push(NTS_N);
+	SymbolStack.push(TS_R_PARENS);
+	break;
+      case 3:
+	SymbolStack.pop();
+	SymbolStack.push(TS_LAMBDA);
+	SymbolStack.push(TS_VAR);
+	SymbolStack.push(TS_POINT);
+	SymbolStack.push(NTS_M);
+	break;
+      case 4:
+	SymbolStack.pop();
+	SymbolStack.push(NTS_M);
+	SymbolStack.push(NTS_L);
+	break;
+      case 5:
+	SymbolStack.pop();
+	SymbolStack.push(NTS_M);
+	break;
+      case 6:
+	SymbolStack.pop();
+	break;
+      default:
+	std::cout << "parsing table defaulted" << std::endl;
+	return false;
+      }
+    }
   }
+  return true;
 }
