@@ -4,8 +4,18 @@
 #include <iostream>
 #include <vector>
 
+
+void intro() {
+    std::cout << "This program is meant for parsing lambda calculus expressions.\n"
+                 "The program will parse the expression and print the abstract syntax tree and the result.\n"
+                 "The program will also print the expression number before printing the tree and the result.\n\n"
+                 "Enter lambda expressions to parse, one per line. Press enter on an empty line to finish.\n" <<
+                 std::endl;
+}
+
 int main() {
-    std::cout << "Enter lambda expressions to parse, one per line. Press enter on an empty line to finish.\n";
+    intro(); // Short introduction to the program
+
     std::vector<std::string> inputs;
     std::string input;
     int exprNr = 1;
