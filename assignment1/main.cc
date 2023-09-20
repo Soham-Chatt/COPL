@@ -1,8 +1,8 @@
 // main.cc
 #include "parser.h"
-#include <string>
-#include <iostream>
-#include <vector>
+#include <iostream> // std::cout, std::cin, std::cerr
+#include <string> // std::string
+#include <vector> // For the (multi-line) expressions
 
 
 void intro() {
