@@ -132,8 +132,16 @@ public:
     Node* parse(const std::string& input_str) {
         input = input_str;
         pos = 0;
-        return parse_expression();
+        Node* result = parse_expression();
+
+        skip_whitespace();
+        if (pos < input.size()) {
+            throw std::runtime_error("Unexpected character at end of input");
+        }
+
+        return result;
     }
+
 };
 
 
