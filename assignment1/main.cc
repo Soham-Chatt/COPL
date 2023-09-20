@@ -193,7 +193,16 @@ int main() {
     std::getline(std::cin, input);
 
     Parser parser;
-    Node* ast = parser.parse(input);
+    Node* ast = nullptr;
+
+    // Try to parse the input string and otherwise return 1 (failed)
+    try {
+        ast = parser.parse(input);
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << '\n';
+        delete ast;
+        return 1;
+    }
 
     // Print the tree
     print_tree(ast);
@@ -202,6 +211,6 @@ int main() {
     std::cout << "Result: " << ast->to_string() << '\n';
 
     delete ast;
-    return 0;
+    return 0; // Successfully parsed
 }
 
