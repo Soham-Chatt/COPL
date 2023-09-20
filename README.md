@@ -4,6 +4,14 @@ M ⟶ x | ( N ) <br>
 N ⟶ \lambda x . M | M L <br>
 L ⟶ M | \epsilon <br>
 
+Rules: <br>
+1. M ⟶ x <br>
+2. M ⟶ ( N ) <br>
+3. N -> \lambda x . M <br>
+4. N -> M L <br>
+5. L ⟶ M <br>
+6. L ⟶ \epsilon <br>
+
 FIRST(M) = {x, (} <br>
 FIRST(N) = {\lambda, x, (} <br>
 FIRST(L) = {x , \epsilon, (} <br>
