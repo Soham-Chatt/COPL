@@ -24,3 +24,12 @@ FOLLOW() = {)} <br>
 | M | 1 | 2 | | |
 | N | 4 | 4 | | 3
 | L | 5 | 5 | 6 | |
+
+Rules: <br>
+1. E -> (E E) <br>
+2. E -> var <br>
+3. E -> \lambda var . E <br>
+
+| | var | ( | \lambda |
+| --- | --- | --- | --- |
+| M | 1 | 2 | | 
