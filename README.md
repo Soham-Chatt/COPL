@@ -1,16 +1,15 @@
-# COPL
-Lambda calculus parser
-grammar:
-M -> x | ( N )
-N -> \lambda x . M | M L
-L -> M | \epsilon
+# Lambda calculus parser
+grammar: <br>
+M -> x | ( N ) <br>
+N -> \lambda x . M | M L <br>
+L -> M | \epsilon <br>
 
-FIRST(M) = {x, (}
-FIRST(N) = {\lambda, x, (}
-FIRST(L) = {x , \epsilon, (}
-FOLLOW() = {x, (, ), $}
-FOLLOW() = {)}
-FOLLOW() = {)}
+FIRST(M) = {x, (} <br>
+FIRST(N) = {\lambda, x, (} <br>
+FIRST(L) = {x , \epsilon, (} <br>
+FOLLOW() = {x, (, ), $} <br>
+FOLLOW() = {)} <br>
+FOLLOW() = {)} <br>
 
 | | x | ( | ) | \lambda |
 | --- | --- | --- | --- | --- |
