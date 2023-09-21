@@ -1,124 +1,155 @@
+// parser.cc
 #include "parser.h"
-#include <map>
-#include <stack>
-#include <string>
-#include <cctype>
-#include <vector>
 
-enum Symbols {
-	// the symbols:
-	// Terminal symbols:
-	TS_L_PARENS,	// (
-	TS_R_PARENS,	// )
-	TS_VAR,		// var (eg. x)
-	TS_POINT,	// .
-	TS_LAMBDA,	// \lambda
-	TS_EOS,		// $, in this case corresponds to '\0'
-	TS_INVALID,	// invalid token
-
-	// Non-terminal symbols:
-	NTS_M,		// M
-	NTS_N,		// N
-	NTS_L		// L
-};
-
-Symbols lexer(std::string c){
-  if(c == "("){
-    return TS_L_PARENS;
-  }
-  else if(c == ")"){
-    return TS_R_PARENS;
-  }
-  else if(isalpha(c[0])){
-    return TS_VAR;
-  }
-  else if(c == "+"){
-    return TS_POINT;
-  }
-  else if(c == "\\"){
-    return TS_LAMBDA;
-  }
-  else if(c == "$"){
-    return TS_EOS;
-  } else {
-    return TS_INVALID;
-  }
+VariableNode::VariableNode(const std::string& name) : name(name) {}
+std::string VariableNode::to_string() const {
+    return name;
 }
 
-bool Parser(std::string expr){
-  std::map< Symbols, std::map<Symbols, int> > ParsingTable;
-  std::stack<Symbols> SymbolStack;
-  std::vector<std::string> tokens;
-  
-  SymbolStack.push(TS_EOS);
-  SymbolStack.push(NTS_M);
+LambdaNode::LambdaNode(const std::string& param, Node* body) : param(param), body(body) { /*...*/ }
+std::string LambdaNode::to_string() const {
+    return "\\" + param + "." + body->to_string();
+}
+LambdaNode::~LambdaNode() {
+    delete body;
+}
 
-  ParsingTable[NTS_M][TS_VAR] = 1;
-  ParsingTable[NTS_M][TS_L_PARENS] = 2;
-  ParsingTable[NTS_N][TS_VAR] = 4;
-  ParsingTable[NTS_N][TS_L_PARENS] = 4;
-  ParsingTable[NTS_N][TS_LAMBDA] = 3;
-  ParsingTable[NTS_L][TS_VAR] = 5;
-  ParsingTable[NTS_L][TS_L_PARENS] = 5;
-  ParsingTable[NTS_L][TS_R_PARENS] = 6;
+ApplicationNode::ApplicationNode(Node* left, Node* right) : left(left), right(right) {}
+std::string ApplicationNode::to_string() const {
+    return "(" + left->to_string() + " " + right->to_string() + ")";
+}
+ApplicationNode::~ApplicationNode() {
+    delete left;
+    delete right;
+}
 
-  for(size_t i = 0; i < expr.length(); i++){
-    if(expr[i] == ' '){
-      continue;
+char Parser::current_char() {
+    return pos < input.size() ? input[pos] : '\0';
+}
+
+void Parser::skip_whitespace() {
+    while (pos < input.size() && std::isspace(input[pos])) {
+        ++pos;
     }
-    else{
-      std::string temp = "";
-      while(expr[i] != ' ' && i < expr.length()){
-	temp += expr[i];
-	i++;
-			}
-      tokens.push_back(temp);
-    }
-  }
-  
-  int pos(0);
-  while(SymbolStack.size() > 0){
-    if(lexer(tokens[pos]) == SymbolStack.top()){
-      std::cout << "Matched symbols: " << lexer(tokens[pos]) << std::endl;
-      pos++;
-      SymbolStack.pop();
+}
+
+std::string Parser::parse_variable() {
+    skip_whitespace();
+    std::string var;
+    if (pos < input.size() && std::isalpha(input[pos])) {
+        var += input[pos];
+        ++pos;
     } else {
-      std::cout << "Rule " << ParsingTable[SymbolStack.top()][lexer(tokens[pos])] << std::endl;
-      switch (ParsingTable[SymbolStack.top()][lexer(tokens[pos])]){
-      case 1:
-	SymbolStack.pop();
-	SymbolStack.push(TS_VAR);
-	break;
-      case 2:
-	SymbolStack.pop();
-	SymbolStack.push(TS_L_PARENS);
-	SymbolStack.push(NTS_N);
-	SymbolStack.push(TS_R_PARENS);
-	break;
-      case 3:
-	SymbolStack.pop();
-	SymbolStack.push(TS_LAMBDA);
-	SymbolStack.push(TS_VAR);
-	SymbolStack.push(TS_POINT);
-	SymbolStack.push(NTS_M);
-	break;
-      case 4:
-	SymbolStack.pop();
-	SymbolStack.push(NTS_M);
-	SymbolStack.push(NTS_L);
-	break;
-      case 5:
-	SymbolStack.pop();
-	SymbolStack.push(NTS_M);
-	break;
-      case 6:
-	SymbolStack.pop();
-	break;
-      default:
-	std::cout << "parsing table defaulted" << std::endl;
-	return false;
-      }
+        throw std::runtime_error("Variable must start with an alphabetic character");
     }
-  }
-  return true;
+
+    while (pos < input.size() && (std::isalpha(input[pos]) || std::isdigit(input[pos]))) {
+        var += input[pos];
+        ++pos;
+    }
+    return var;
+}
+
+Node* Parser::parse_expression() {
+    skip_whitespace();
+
+    Node* node = parse_atom();
+
+    while (true) {
+        skip_whitespace();
+        // If the next character is a '(' or a letter then it must be the start of another expression
+        // Parse the right node because function node is left child and argument node is right child
+        if (current_char() == '(' || std::isalpha(current_char())) {
+            Node* right = parse_atom();
+            node = new ApplicationNode{node, right};
+        } else {
+            break;
+        }
+    }
+
+    return node;
+}
+
+bool is_lambda_char(char ch) {
+    return ch == '\\';
+}
+
+bool is_variable_start_char(char ch) {
+    return std::isalpha(ch);
+}
+
+bool is_open_bracket(char ch) {
+    return ch == '(';
+}
+
+Node* Parser::parse_atom() {
+    skip_whitespace();
+
+    char ch = current_char();
+    if (is_lambda_char(ch)) {
+        return parse_lambda();
+    }
+    else if (is_open_bracket(ch)) {
+        ++pos;
+        Node* node = parse_expression();
+        skip_whitespace();
+        if (current_char() == ')') {
+            ++pos;
+            return node;
+        }
+        else {
+            throw std::runtime_error("Expected ')'");
+        }
+    }
+    else if (is_variable_start_char(ch)) {
+        return new VariableNode{parse_variable()};
+    }
+    else {
+        throw std::runtime_error("Unexpected character encountered");
+    }
+}
+
+
+Node* Parser::parse_lambda() {
+    ++pos; // Skip the '\' character
+    std::string param = parse_variable(); // Parse the parameter name
+    skip_whitespace();
+    if (current_char() == '.') {
+        ++pos; // Skip the '.' character
+    }
+    Node* body = parse_expression(); // Parse the body of the lambda
+    return new LambdaNode{param, body};
+}
+
+Node* Parser::parse(const std::string& input_str) {
+    input = input_str;
+    pos = 0;
+    Node* result = parse_expression();
+
+    skip_whitespace();
+    if (pos < input.size()) {
+        throw std::runtime_error("Unexpected character at end of input");
+    }
+
+    return result;
+}
+
+void print_tree(Node* node, int depth) {
+    if (!node) return;
+
+    for(int i = 0; i < depth; ++i) std::cout << "  ";
+
+    if (auto v = dynamic_cast<VariableNode*>(node)) {
+        // If the node is a VariableNode, print the variable name
+        std::cout << "Variable: " << v->name << '\n';
+    } else if (auto l = dynamic_cast<LambdaNode*>(node)) {
+        // If the node is a LambdaNode, recursively print the body of the lambda
+        std::cout << "Lambda: " << l->param << '\n';
+        print_tree(l->body, depth+1);
+    } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
+        // If the node is ApplicationNode, recursively print both the left and right child nodes
+        std::cout << "Application:\n";
+        print_tree(a->left, depth+1);
+        print_tree(a->right, depth+1);
+    }
 }
