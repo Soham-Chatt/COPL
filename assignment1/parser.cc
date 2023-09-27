@@ -23,7 +23,7 @@ ApplicationNode::~ApplicationNode() {
     delete right;
 }
 
-char Parser::current_char() {
+wchar_t Parser::current_char() {
     return pos < input.size() ? input[pos] : '\0';
 }
 
@@ -70,22 +70,22 @@ Node* Parser::parse_expression() {
     return node;
 }
 
-bool is_lambda_char(char ch) {
-    return ch == '\\';
+bool is_lambda_char(wchar_t ch) {
+    return ch == '\\' || ch == L'\u03bb';
 }
 
-bool is_variable_start_char(char ch) {
+bool is_variable_start_char(wchar_t ch) {
     return std::isalpha(ch);
 }
 
-bool is_open_bracket(char ch) {
+bool is_open_bracket(wchar_t ch) {
     return ch == '(';
 }
 
 Node* Parser::parse_atom() {
     skip_whitespace();
 
-    char ch = current_char();
+    wchar_t ch = current_char();
     if (is_lambda_char(ch)) {
         return parse_lambda();
     }

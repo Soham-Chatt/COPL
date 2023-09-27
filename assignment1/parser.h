@@ -50,7 +50,7 @@ private:
     std::string input;
     size_t pos = 0;
 
-    char current_char();
+    wchar_t current_char();
     void skip_whitespace();
     std::string parse_variable();
     Node* parse_expression();
