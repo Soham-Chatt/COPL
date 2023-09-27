@@ -23,7 +23,7 @@ ApplicationNode::~ApplicationNode() {
     delete right;
 }
 
-wchar_t Parser::current_char() {
+char Parser::current_char() {
     return pos < input.size() ? input[pos] : '\0';
 }
 
@@ -71,7 +71,7 @@ Node* Parser::parse_expression() {
 }
 
 bool is_lambda_char(wchar_t ch) {
-    return ch == '\\' || ch == L'\u03bb';
+    return ch == '\\';
 }
 
 bool is_variable_start_char(wchar_t ch) {
