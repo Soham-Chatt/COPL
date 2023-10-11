@@ -134,24 +134,37 @@ Node* Parser::parse(const std::string& input_str) {
     return result;
 }
 
-void print_tree(Node* node, int depth) {
+void assign_depth(Node* node, int depth) {
     if (!node) return;
 
-    for(int i = 0; i < depth; ++i) {
+    node->depth = depth;
+
+    if (auto l = dynamic_cast<LambdaNode*>(node)) {
+        assign_depth(l->body, depth+1);
+    } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
+        assign_depth(a->left, depth+1);
+        assign_depth(a->right, depth+1);
+    }
+}
+
+void print_tree(Node* node) {
+    if (!node) return;
+
+    for(int i = 0; i < node->depth; ++i) {
       std::cout << "  ";
     }
 
     if (auto v = dynamic_cast<VariableNode*>(node)) {
         // If the node is a VariableNode, print the variable name
-        std::cout << "Variable: " << v->name << '\n';
+      std::cout << "Variable: " << v->name << '\n';
     } else if (auto l = dynamic_cast<LambdaNode*>(node)) {
         // If the node is a LambdaNode, recursively print the body of the lambda
-        std::cout << "Lambda: " << l->param << '\n';
-        print_tree(l->body, depth+1);
+      std::cout << "Lambda: " << l->param << '\n';
+      print_tree(l->body);
     } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
         // If the node is ApplicationNode, recursively print both the left and right child nodes
-        std::cout << "Application:\n";
-        print_tree(a->left, depth+1);
-        print_tree(a->right, depth+1);
+      std::cout << "Application:\n";
+      print_tree(a->left);
+      print_tree(a->right);
     }
 }

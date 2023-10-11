@@ -42,6 +42,7 @@ void parseAndEvaluateExpressions(const std::vector<std::string>& inputs, Parser&
 
         // Displaying the expression number before printing the tree and the result
         std::cout << "Expression " << exprNr << ":\n";
+        assign_depth(ast);
         print_tree(ast);
         std::cout << "Result: " << ast->to_string() << std::endl << std::endl;
 

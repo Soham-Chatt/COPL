@@ -64,6 +64,7 @@ private:
     Node* parse_lambda();
 };
 
-void print_tree(Node* node, int depth = 0);
+void print_tree(Node* node);
+void assign_depth(Node* node, int depth = 0);
 
 #endif //PARSER_H
