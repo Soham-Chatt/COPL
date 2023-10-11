@@ -137,7 +137,9 @@ Node* Parser::parse(const std::string& input_str) {
 void print_tree(Node* node, int depth) {
     if (!node) return;
 
-    for(int i = 0; i < depth; ++i) std::cout << "  ";
+    for(int i = 0; i < depth; ++i) {
+      std::cout << "  ";
+    }
 
     if (auto v = dynamic_cast<VariableNode*>(node)) {
         // If the node is a VariableNode, print the variable name

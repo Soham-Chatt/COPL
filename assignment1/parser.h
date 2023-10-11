@@ -9,8 +9,14 @@
 
 class Node {
 public:
-    virtual ~Node() = default;
     virtual std::string to_string() const = 0;
+    int depth;
+
+    Node() {
+        depth = 0;
+    }
+
+    virtual ~Node() = default;
 };
 
 class VariableNode : public Node {
