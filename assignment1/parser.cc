@@ -147,6 +147,10 @@ void assign_depth(Node* node, int depth) {
     }
 }
 
+void betaReduction(Node* node) {
+    // TODO
+}
+
 void print_tree(Node* node) {
     if (!node) return;
 
