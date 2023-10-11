@@ -66,5 +66,5 @@ private:
 
 void print_tree(Node* node);
 void assign_depth(Node* node, int depth = 0);
-void betaReduction(Node* node);
+std::string generate_dot(Node* node);
 #endif //PARSER_H

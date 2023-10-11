@@ -44,6 +44,13 @@ void parseAndEvaluateExpressions(const std::vector<std::string>& inputs, Parser&
         std::cout << "Expression " << exprNr << ":\n";
         assign_depth(ast);
         print_tree(ast);
+
+        // Displaying the tree in dot format
+        std::string dot = "digraph G {\n";
+        dot += generate_dot(ast);
+        dot += "}\n";
+        std::cout << dot;
+
         std::cout << "Result: " << ast->to_string() << std::endl << std::endl;
 
         delete ast;

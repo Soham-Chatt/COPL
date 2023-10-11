@@ -1,5 +1,6 @@
 // parser.cc
 #include "parser.h"
+#include <sstream>
 
 VariableNode::VariableNode(const std::string& name) : name(name) {}
 std::string VariableNode::to_string() const {
@@ -147,8 +148,35 @@ void assign_depth(Node* node, int depth) {
     }
 }
 
-void betaReduction(Node* node) {
-    // TODO
+std::string generate_dot(Node* node) {
+  static int counter = 0;
+  std::ostringstream out;
+
+  if (!node) return "";
+
+  int cur_id = counter++;
+  std::string label;
+
+  if (auto v = dynamic_cast<VariableNode*>(node)) {
+    label = "Variable: " + v->name;
+  } else if (auto l = dynamic_cast<LambdaNode*>(node)) {
+    label = "Lambda: " + l->param;
+    int body_id = counter;
+    out << generate_dot(l->body);
+    out << cur_id << " -> " << body_id << ";\n";
+  } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
+    label = "Application";
+    int left_id = counter;
+    out << generate_dot(a->left);
+    out << cur_id << " -> " << left_id << ";\n";
+
+    int right_id = counter;
+    out << generate_dot(a->right);
+    out << cur_id << " -> " << right_id << ";\n";
+  }
+
+  out << cur_id << " [label=\"" << label << "\"];\n";
+  return out.str();
 }
 
 void print_tree(Node* node) {
