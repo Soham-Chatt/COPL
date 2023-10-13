@@ -2,30 +2,36 @@
 const int MAX_ITERATIONS = 100;
 
 Node* Interpreter::eval(Node* node, std::unordered_set<std::string>& bound_vars, int& iterations) {
-
   if (iterations >= MAX_ITERATIONS) {
-    return nullptr;  // Reached max iterations
+    return node; // Reached max iterations
   }
 
-  // If the node is an application and its left child is lambda, try to reduce it
+  iterations++;
+
   if (auto app = dynamic_cast<ApplicationNode*>(node)) {
-    if (auto lambda = dynamic_cast<LambdaNode*>(app->left)) {
+    Node* left = eval(app->left, bound_vars, iterations); // Evaluate left child
+    Node* right = eval(app->right, bound_vars, iterations); // Evaluate right child
+
+    if (auto lambda = dynamic_cast<LambdaNode*>(left)) {
       bound_vars.insert(lambda->param);
-      Node* subst = substitute(lambda->body, lambda->param, app->right);
+      Node* subst = substitute(lambda->body, lambda->param, right);
       return eval(subst, bound_vars, iterations);
     }
+    return new ApplicationNode{left, right}; // Return if no reduction was done
   }
-  // If the node is a lambda, and it has a bound variable, try to reduce it
   else if (auto lambda = dynamic_cast<LambdaNode*>(node)) {
     if (bound_vars.find(lambda->param) != bound_vars.end()) {
+      // Alpha-conversion
       std::string new_var = unique_var(lambda->param, bound_vars);
-      bound_vars.erase(lambda->param);
-      bound_vars.insert(new_var);
+      lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var});
       lambda->param = new_var;
     }
+    lambda->body = eval(lambda->body, bound_vars, iterations);
+    return lambda;
   }
-  return node; // Return node if no reduction was performed
+  return node;
 }
+
 
 Node* Interpreter::substitute(Node* node, const std::string& var, Node* value) {
   // If the node is a variable, and its name matches the variable to be substituted, return the substitution value
