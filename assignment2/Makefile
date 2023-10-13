@@ -11,8 +11,11 @@ OBJS = main.o parser.o interpreter.o
 all: main
 
 # Target to run the executable
-run: main
-	./main file.txt
+pos: main
+	./main positive.txt
+
+neg: main
+	./main negative.txt
 
 # Target to link the object files and create the main executable
 main: $(OBJS)
