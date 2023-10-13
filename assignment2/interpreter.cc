@@ -3,8 +3,7 @@ const int MAX_ITERATIONS = 10000;
 
 Node* Interpreter::eval(Node* node, std::unordered_set<std::string>& bound_vars, int& iterations) {
   if (iterations >= MAX_ITERATIONS) {
-    std::cerr << "Reached max iterations" << std::endl;
-    exit(1); // Reached max iterations
+    throw std::runtime_error("Maximum number of iterations reached");
   }
 
   iterations++;

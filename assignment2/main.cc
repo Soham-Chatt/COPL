@@ -22,18 +22,30 @@ int main(int argc, char *argv[]) {
   Interpreter interpreter;
 
   while (std::getline(inFile, line)) {
-    Node* root = parser.parse(line); // Parse each line and create AST
+    Node* root = nullptr;
+    Node* reduced = nullptr;
+    try {
+      root = parser.parse(line);
+    } catch (std::runtime_error& e) {
+      std::cerr << "Error: " << e.what() << std::endl;
+      continue;
+    }
 
     std::unordered_set<std::string> bound_vars;
     int iterations = 0;
-
-    Node* reduced = interpreter.eval(root, bound_vars, iterations);
-
-    if (reduced) {
-      std::cout << "Reduced expression: " << reduced->to_string() << std::endl;
-    } else {
-      std::cout << "Could not reduce the expression further." << std::endl;
+    try {
+      reduced = interpreter.eval(root, bound_vars, iterations);
+      if (reduced) {
+        std::cout << "Reduced expression: " << reduced->to_string() << std::endl;
+      } else {
+        std::cout << "Could not reduce the expression further." << std::endl;
+      }
+    } catch (std::runtime_error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
+
+    delete root;
+    delete reduced;
   }
 
   return 0;
