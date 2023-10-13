@@ -2,17 +2,17 @@
 CC = g++
 
 # Compilation parameters
-CompileParms = -c -Wall -std=c++11 -O2
+CompileParms = -g -c -Wall -std=c++11 -O2
 
 # List of object files
-OBJS = main.o parser.o
+OBJS = main.o parser.o interpreter.o
 
 # Default target
 all: main
 
 # Target to run the executable
 run: main
-	./main
+	./main file.txt
 
 # Target to link the object files and create the main executable
 main: $(OBJS)
