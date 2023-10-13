@@ -1,5 +1,5 @@
 #include "interpreter.h"
-const int MAX_ITERATIONS = 2;
+const int MAX_ITERATIONS = 100;
 
 Node* Interpreter::eval(Node* node, std::unordered_set<std::string>& bound_vars, int& iterations) {
 
