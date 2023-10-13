@@ -9,45 +9,56 @@
 
 class Node {
 public:
-    virtual std::string to_string() const = 0;
-    int depth;
+  virtual std::string to_string() const = 0;
+  virtual Node* copy() const = 0;
+  int depth;
 
-    Node() {
-        depth = 0;
-    }
+  Node() {
+    depth = 0;
+  }
 
-    virtual ~Node() = default;
+  virtual ~Node() = default;
 };
 
 class VariableNode : public Node {
 public:
-    std::string name;
-    VariableNode(const std::string& name);
+  std::string name;
+  VariableNode(const std::string& name);
 
-    std::string to_string() const override;
+  std::string to_string() const override;
+  Node* copy() const override {
+    return new VariableNode(*this);
+  }
 };
 
 class LambdaNode : public Node {
 public:
-    std::string param;
-    Node* body;
-    LambdaNode(const std::string& param, Node* body);
+  std::string param;
+  Node* body;
+  LambdaNode(const std::string& param, Node* body);
 
-    std::string to_string() const override;
+  std::string to_string() const override;
+  Node* copy() const override {
+    return new LambdaNode(param, body->copy());
+  }
 
-    ~LambdaNode();
+  ~LambdaNode();
 };
 
 class ApplicationNode : public Node {
 public:
-    Node* left;
-    Node* right;
-    ApplicationNode(Node* left, Node* right);
+  Node* left;
+  Node* right;
+  ApplicationNode(Node* left, Node* right);
 
-    std::string to_string() const override;
+  std::string to_string() const override;
+  Node* copy() const override {
+    return new ApplicationNode(left->copy(), right->copy());
+  }
 
-    ~ApplicationNode();
+  ~ApplicationNode();
 };
+
 
 class Parser {
 public:
