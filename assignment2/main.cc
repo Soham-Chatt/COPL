@@ -21,18 +21,21 @@ int main(int argc, char *argv[]) {
   Parser parser;
   Interpreter interpreter;
 
+  // Read line by line
   while (std::getline(inFile, line)) {
-    Node* root = nullptr;
-    Node* reduced = nullptr;
+    Node *root = nullptr;
+    Node *reduced = nullptr;
+    // Parse the line
     try {
       root = parser.parse(line);
-    } catch (std::runtime_error& e) {
+    } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
       continue;
     }
 
     std::unordered_set<std::string> bound_vars;
     int iterations = 0;
+    // Evaluate the expression
     try {
       reduced = interpreter.eval(root, bound_vars, iterations);
       if (reduced) {
@@ -40,8 +43,8 @@ int main(int argc, char *argv[]) {
       } else {
         std::cout << "Could not reduce the expression further." << std::endl;
       }
-    } catch (std::runtime_error& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    } catch (std::runtime_error &e) {
+      std::cerr << "Error: " << e.what() << std::endl;
     }
 
     delete root;
