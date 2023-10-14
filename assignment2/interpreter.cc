@@ -2,6 +2,19 @@
 
 const int MAX_ITERATIONS = 10000;
 
+Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument) {
+  Node *subst = substitute(lambda->body->copy(), lambda->param, argument);
+  return subst;
+}
+
+void Interpreter::alpha_conversion(LambdaNode *lambda, std::unordered_set<std::string> &bound_vars) {
+  if (bound_vars.find(lambda->param) != bound_vars.end()) {
+    std::string new_var = unique_var(lambda->param, bound_vars);
+    lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var});
+    lambda->param = new_var;
+  }
+}
+
 Node *Interpreter::eval(Node *node, std::unordered_set<std::string> &bound_vars, int &iterations) {
   if (iterations >= MAX_ITERATIONS) {
     throw std::runtime_error("Maximum number of iterations reached");
@@ -10,34 +23,29 @@ Node *Interpreter::eval(Node *node, std::unordered_set<std::string> &bound_vars,
   iterations++;
 
   if (auto a = dynamic_cast<ApplicationNode *>(node)) {
-    // Evaluate the left and right nodes
     Node *left = eval(a->left->copy(), bound_vars, iterations);
     Node *right = eval(a->right->copy(), bound_vars, iterations);
 
-    // If left node is lambda, do substitution
     if (auto l = dynamic_cast<LambdaNode *>(left)) {
       bound_vars.insert(l->param); // Parameter is a bound variable
-      Node *subst = substitute(l->body->copy(), l->param, right);
+      Node *subst = beta_reduction(l, right);
       delete left;
       delete right;
       return eval(subst, bound_vars, iterations);
     }
+
     return new ApplicationNode{left, right};
-  } else if (auto l = dynamic_cast<LambdaNode *>(node)) {
-    // Copy l and rename the bound variable if needed
+  }
+  else if (auto l = dynamic_cast<LambdaNode *>(node)) {
     LambdaNode *new_lambda = new LambdaNode{l->param, l->body->copy()};
-    // If the parameter is already bound, alpha-convert
-    if (bound_vars.find(new_lambda->param) != bound_vars.end()) {
-      // Alpha-conversion
-      std::string new_var = unique_var(new_lambda->param, bound_vars);
-      new_lambda->body = substitute(new_lambda->body, new_lambda->param, new VariableNode{new_var});
-      new_lambda->param = new_var;
-    }
+    alpha_conversion(new_lambda, bound_vars);
     new_lambda->body = eval(new_lambda->body, bound_vars, iterations);
     return new_lambda;
   }
+
   return node->copy();
 }
+
 
 Node *Interpreter::substitute(Node *node, const std::string &var, Node *value) {
   // Substitute all var with value
