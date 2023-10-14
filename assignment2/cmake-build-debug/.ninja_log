@@ -1,0 +1,20 @@
+# ninja log v5
+0	330	7189093900915089	CMakeFiles/assignment2.dir/interpreter.cc.obj	69c13c4f74aa222d
+6	377	7189093901395100	CMakeFiles/assignment2.dir/parser.cc.obj	e8457119fe8d96ed
+4	389	7189093901515098	CMakeFiles/assignment2.dir/main.cc.obj	d6605a8f89115fa9
+389	553	7189093903125085	assignment2.exe	e6b5497b6d790a5e
+2	289	7189094594222115	CMakeFiles/assignment2.dir/interpreter.cc.obj	69c13c4f74aa222d
+289	377	7189094595082108	assignment2.exe	e6b5497b6d790a5e
+5	296	7189099838321985	CMakeFiles/assignment2.dir/interpreter.cc.obj	69c13c4f74aa222d
+2	352	7189099838871986	CMakeFiles/assignment2.dir/main.cc.obj	d6605a8f89115fa9
+8	385	7189124769460192	CMakeFiles/assignment2.dir/parser.cc.obj	e8457119fe8d96ed
+6	443	7189124770040192	CMakeFiles/assignment2.dir/main.cc.obj	d6605a8f89115fa9
+2	490	7189124770510188	CMakeFiles/assignment2.dir/interpreter.cc.obj	69c13c4f74aa222d
+490	591	7189124771500187	assignment2.exe	e6b5497b6d790a5e
+10	412	7189920161761029	CMakeFiles/assignment2.dir/parser.cc.obj	e8457119fe8d96ed
+2	478	7189920162431040	CMakeFiles/assignment2.dir/main.cc.obj	d6605a8f89115fa9
+7	521	7189920162861024	CMakeFiles/assignment2.dir/interpreter.cc.obj	69c13c4f74aa222d
+521	713	7189920164761029	assignment2.exe	e6b5497b6d790a5e
+3	407	7189992958506604	CMakeFiles/assignment2.dir/main.cc.obj	d6605a8f89115fa9
+7	454	7189992958976603	CMakeFiles/assignment2.dir/interpreter.cc.obj	69c13c4f74aa222d
+454	549	7189992959906607	assignment2.exe	e6b5497b6d790a5e
