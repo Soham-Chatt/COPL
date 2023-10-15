@@ -1,6 +1,6 @@
 #include "interpreter.h"
 
-const int MAX_ITERATIONS = 10000;
+const int MAX_ITERATIONS = 10001;
 
 Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars) {
   std::cout << "Beta reduction: " << lambda->param << " -> " << argument->to_string() << std::endl;
@@ -17,6 +17,7 @@ void Interpreter::alpha_conversion(LambdaNode *lambda, std::unordered_set<std::s
   std::cout << "Alpha conversion: " << lambda->param << std::endl;
   std::string new_var = unique_var(lambda->param, bound_vars);
   bound_vars.insert(new_var);
+  std::cout << "New variable: " << new_var << std::endl;
   lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var}, bound_vars);
   lambda->param = new_var;
 }
@@ -80,4 +81,20 @@ std::string Interpreter::unique_var(const std::string &var, const std::unordered
     new_var = var + std::to_string(counter++);
   }
   return new_var;
+}
+
+  // find all bound variables and enter them into the unordered set
+  // to do this we traverse the tree and check which variables are in a lambda/application node
+  // this is done recursively, the is a void function, so it does not return anything
+// also avoids duplicates
+void Interpreter::find_bound_vars(Node *node, std::unordered_set<std::string> &bound_vars) {
+  if (auto v = dynamic_cast<VariableNode *>(node)) {
+    // do nothing
+  } else if (auto l = dynamic_cast<LambdaNode *>(node)) {
+    bound_vars.insert(l->param);
+    find_bound_vars(l->body, bound_vars);
+  } else if (auto a = dynamic_cast<ApplicationNode *>(node)) {
+    find_bound_vars(a->left, bound_vars);
+    find_bound_vars(a->right, bound_vars);
+  }
 }

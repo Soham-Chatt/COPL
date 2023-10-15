@@ -15,6 +15,8 @@ public:
   Node *beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars);
 
   void alpha_conversion(LambdaNode *lambda, std::unordered_set<std::string> &bound_vars);
+
+  void find_bound_vars(Node *node, std::unordered_set<std::string> &bound_vars);
 };
 
 #endif // INTERPRETER_H
