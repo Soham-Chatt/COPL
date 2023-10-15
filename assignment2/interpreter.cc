@@ -16,9 +16,8 @@ Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unord
 
 void Interpreter::alpha_conversion(LambdaNode *lambda, std::unordered_set<std::string> &bound_vars) {
   std::string new_var = unique_var(lambda->param, bound_vars);
-  std::unordered_set<std::string> local_bound_vars = bound_vars;  // Local copy for this lambda.
-  local_bound_vars.insert(new_var);
-  lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var}, local_bound_vars);
+  bound_vars.insert(new_var);
+  lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var}, bound_vars);
   lambda->param = new_var;
 }
 
