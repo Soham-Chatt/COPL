@@ -3,18 +3,26 @@
 const int MAX_ITERATIONS = 10000;
 
 Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars) {
+  // Do alpha conversion if we are dealing with a bound variable
+  if (bound_vars.find(lambda->param) != bound_vars.end()) {
+    alpha_conversion(lambda, bound_vars);
+    bound_vars.insert(lambda->param);
+  }
+
+   bound_vars.insert(lambda->param);
   Node *subst = substitute(lambda->body->copy(), lambda->param, argument, bound_vars);
+   bound_vars.erase(lambda->param);
   return subst;
 }
 
 void Interpreter::alpha_conversion(LambdaNode *lambda, std::unordered_set<std::string> &bound_vars) {
-  // If the parameter is already bound, generate a new unique variable name
-  if (bound_vars.find(lambda->param) != bound_vars.end()) {
-    std::string new_var = unique_var(lambda->param, bound_vars);
-    lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var}, bound_vars);
-    lambda->param = new_var;
-  }
+  std::string new_var = unique_var(lambda->param, bound_vars);
+  std::unordered_set<std::string> local_bound_vars = bound_vars;  // Local copy for this lambda.
+  local_bound_vars.insert(new_var);
+  lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var}, local_bound_vars);
+  lambda->param = new_var;
 }
+
 
 Node *Interpreter::eval(Node *node, std::unordered_set<std::string> &bound_vars, int &iterations) {
   if (iterations >= MAX_ITERATIONS) {
@@ -28,20 +36,12 @@ Node *Interpreter::eval(Node *node, std::unordered_set<std::string> &bound_vars,
     Node *right = eval(a->right->copy(), bound_vars, iterations);
 
     if (auto l = dynamic_cast<LambdaNode *>(left)) {
-      bound_vars.insert(l->param); // Parameter is a bound variable
       Node *subst = beta_reduction(l, right, bound_vars);
       delete left;
       delete right;
       return eval(subst, bound_vars, iterations);
     }
-
     return new ApplicationNode{left, right};
-  }
-  else if (auto l = dynamic_cast<LambdaNode *>(node)) {
-    LambdaNode *new_lambda = new LambdaNode{l->param, l->body->copy()};
-    alpha_conversion(new_lambda, bound_vars);
-    new_lambda->body = eval(new_lambda->body, bound_vars, iterations);
-    return new_lambda;
   }
 
   return node->copy();
