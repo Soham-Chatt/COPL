@@ -8,13 +8,15 @@ class Interpreter {
 public:
   Node *eval(Node *node, std::unordered_set<std::string> &bound_vars, int &iterations);
 
-  Node *substitute(Node *node, const std::string &var, Node *value);
+  Node *substitute(Node *node, const std::string &var, Node *value, std::unordered_set<std::string> &bound_vars);
 
   std::string unique_var(const std::string &var, const std::unordered_set<std::string> &bound_vars);
 
-  Node *beta_reduction(LambdaNode *lambda, Node *argument);
+  Node *beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars);
 
   void alpha_conversion(LambdaNode *lambda, std::unordered_set<std::string> &bound_vars);
+
+  std::unordered_set<std::string> get_free_vars(Node *node, std::unordered_set<std::string> &bound_vars);
 };
 
 #endif // INTERPRETER_H

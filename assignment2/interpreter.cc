@@ -2,15 +2,16 @@
 
 const int MAX_ITERATIONS = 10000;
 
-Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument) {
-  Node *subst = substitute(lambda->body->copy(), lambda->param, argument);
+Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars) {
+  Node *subst = substitute(lambda->body->copy(), lambda->param, argument, bound_vars);
   return subst;
 }
 
 void Interpreter::alpha_conversion(LambdaNode *lambda, std::unordered_set<std::string> &bound_vars) {
+  // If the parameter is already bound, generate a new unique variable name
   if (bound_vars.find(lambda->param) != bound_vars.end()) {
     std::string new_var = unique_var(lambda->param, bound_vars);
-    lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var});
+    lambda->body = substitute(lambda->body, lambda->param, new VariableNode{new_var}, bound_vars);
     lambda->param = new_var;
   }
 }
@@ -28,7 +29,7 @@ Node *Interpreter::eval(Node *node, std::unordered_set<std::string> &bound_vars,
 
     if (auto l = dynamic_cast<LambdaNode *>(left)) {
       bound_vars.insert(l->param); // Parameter is a bound variable
-      Node *subst = beta_reduction(l, right);
+      Node *subst = beta_reduction(l, right, bound_vars);
       delete left;
       delete right;
       return eval(subst, bound_vars, iterations);
@@ -47,11 +48,13 @@ Node *Interpreter::eval(Node *node, std::unordered_set<std::string> &bound_vars,
 }
 
 
-Node *Interpreter::substitute(Node *node, const std::string &var, Node *value) {
+Node *Interpreter::substitute(Node *node, const std::string &var, Node *value, std::unordered_set<std::string> &bound_vars) {
   // Substitute all var with value
   if (auto v = dynamic_cast<VariableNode *>(node)) {
     if (v->name == var) {
-      return value->copy();
+      if (bound_vars.find(var) == bound_vars.end()) {
+        return value->copy();
+      }
     }
     return new VariableNode{v->name};
   } else if (auto l = dynamic_cast<LambdaNode *>(node)) {
@@ -59,13 +62,17 @@ Node *Interpreter::substitute(Node *node, const std::string &var, Node *value) {
     if (l->param == var) {
       return new LambdaNode{l->param, l->body->copy()};
     }
-    return new LambdaNode{l->param, substitute(l->body, var, value)}; // Substitute in the body
+    bound_vars.insert(l->param);
+    auto new_body = substitute(l->body, var, value, bound_vars);
+    bound_vars.erase(l->param);
+    return new LambdaNode{l->param, new_body};
   } else if (auto a = dynamic_cast<ApplicationNode *>(node)) {
     // Substitute in left and right nodes
-    return new ApplicationNode{substitute(a->left, var, value), substitute(a->right, var, value)};
+    return new ApplicationNode{substitute(a->left, var, value, bound_vars), substitute(a->right, var, value, bound_vars)};
   }
   return node->copy();
 }
+
 
 std::string Interpreter::unique_var(const std::string &var, const std::unordered_set<std::string> &bound_vars) {
   // Generate a new unique variable name by appending a number to the original variable name
