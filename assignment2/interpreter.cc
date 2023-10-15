@@ -9,7 +9,10 @@ Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unord
     alpha_conversion(lambda, bound_vars);
   }
 
+  bound_vars.insert(lambda->param);
   Node *subst = substitute(lambda->body->copy(), lambda->param, argument, bound_vars);
+  bound_vars.erase(lambda->param);
+
   return subst;
 }
 
@@ -88,9 +91,7 @@ std::string Interpreter::unique_var(const std::string &var, const std::unordered
   // this is done recursively, the is a void function, so it does not return anything
 // also avoids duplicates
 void Interpreter::find_bound_vars(Node *node, std::unordered_set<std::string> &bound_vars) {
-  if (auto v = dynamic_cast<VariableNode *>(node)) {
-    // do nothing
-  } else if (auto l = dynamic_cast<LambdaNode *>(node)) {
+  if (auto l = dynamic_cast<LambdaNode *>(node)) {
     bound_vars.insert(l->param);
     find_bound_vars(l->body, bound_vars);
   } else if (auto a = dynamic_cast<ApplicationNode *>(node)) {
