@@ -6,12 +6,11 @@ Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unord
   // Do alpha conversion if we are dealing with a bound variable
   if (bound_vars.find(lambda->param) != bound_vars.end()) {
     alpha_conversion(lambda, bound_vars);
-    bound_vars.insert(lambda->param);
   }
 
-  bound_vars.insert(lambda->param);
+//  bound_vars.insert(lambda->param);
   Node *subst = substitute(lambda->body->copy(), lambda->param, argument, bound_vars);
-  bound_vars.erase(lambda->param);
+//  bound_vars.erase(lambda->param);
   return subst;
 }
 
