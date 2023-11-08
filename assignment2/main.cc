@@ -33,12 +33,10 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
-    std::unordered_set<std::string> bound_vars;
     int iterations = 0;
     // Evaluate the expression
     try {
-      interpreter.find_bound_vars(root, bound_vars);
-      reduced = interpreter.eval(root, bound_vars, iterations);
+      reduced = interpreter.eval(root, iterations);
       if (reduced) {
         std::cout << "Reduced expression: " << reduced->to_string() << std::endl;
       } else {
