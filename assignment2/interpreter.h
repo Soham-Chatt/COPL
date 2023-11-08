@@ -17,7 +17,7 @@ public:
   Node* alpha_conversion(Node *body, std::string &param,
                         std::unordered_set<std::string> &bound_vars);
 
-  std::string is_conflict(std::unordered_set<std::string> bound_vars, const std::unordered_set<std::string> &free_vars);
+  static std::string is_conflict(std::unordered_set<std::string> bound_vars, const std::unordered_set<std::string> &free_vars);
 
   Node *beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars,
                        std::unordered_set<std::string> &free_vars);
