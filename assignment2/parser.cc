@@ -106,16 +106,12 @@ Node* Parser::parse_atom() {
 }
 
 
-
-
 Node* Parser::parse_lambda() {
   ++pos; // Skip the '\' character
   std::string param = parse_variable(); // Parse the parameter name
   skip_whitespace();
   if (current_char() == '.') {
     ++pos; // Skip the '.' character
-  } else {
-    throw std::runtime_error("Expected '.' after lambda parameter");
   }
   Node* body = parse_atom(); // Parse the body of the lambda
   return new LambdaNode{param, body};
