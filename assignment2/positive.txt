@@ -1,1 +1,5 @@
+(x y)
+(\x x) (\y y)
 (\x \y x)(\z y)
+(\x y)((\x (x x))(\x (x x)))
+(\x. x x)(\x. x x)

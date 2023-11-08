@@ -52,24 +52,24 @@ std::string Parser::parse_variable() {
 }
 
 Node* Parser::parse_expression() {
+  skip_whitespace();
+
+  Node* expr = parse_atom();
+
+  while (true) {
     skip_whitespace();
-
-    Node* node = parse_atom();
-
-    while (true) {
-        skip_whitespace();
-        // If the next character is a '(' or a letter then it must be the start of another expression
-        // Parse the right node because function node is left child and argument node is right child
-        if (current_char() == '(' || std::isalpha(current_char())) {
-            Node* right = parse_atom();
-            node = new ApplicationNode{node, right};
-        } else {
-            break;
-        }
+    // Check if the current character is the start of a new atom
+    if (current_char() == '(' || std::isalpha(current_char())) {
+      Node* right = parse_atom();
+      expr = new ApplicationNode(expr, right);
+    } else {
+      break; // No more applications, exit loop
     }
+  }
 
-    return node;
+  return expr;
 }
+
 
 bool is_lambda_char(wchar_t ch) {
     return ch == '\\';
@@ -82,45 +82,45 @@ bool is_variable_start_char(wchar_t ch) {
 bool is_open_bracket(wchar_t ch) {
     return ch == '(';
 }
-
 Node* Parser::parse_atom() {
-    skip_whitespace();
+  skip_whitespace();
+  wchar_t ch = current_char();
 
-    wchar_t ch = current_char();
-    if (is_lambda_char(ch)) {
-        return parse_lambda();
+  if (is_lambda_char(ch)) {
+    return parse_lambda();
+  } else if (is_open_bracket(ch)) {
+    ++pos; // consume '('
+    Node* node = parse_expression(); // parse expression within the brackets
+    skip_whitespace();
+    if (current_char() == ')') {
+      ++pos; // consume ')'
+    } else {
+      throw std::runtime_error("Expected ')'");
     }
-    else if (is_open_bracket(ch)) {
-        ++pos;
-        Node* node = parse_expression();
-        skip_whitespace();
-        if (current_char() == ')') {
-            ++pos;
-            return node;
-        }
-        else {
-            throw std::runtime_error("Expected ')'");
-        }
-    }
-    else if (is_variable_start_char(ch)) {
-        return new VariableNode{parse_variable()};
-    }
-    else {
-        throw std::runtime_error("Unexpected character encountered");
-    }
+    return node; // the expression inside the brackets is treated as one atom
+  } else if (is_variable_start_char(ch)) {
+    return new VariableNode{parse_variable()};
+  } else {
+    throw std::runtime_error("Unexpected character encountered");
+  }
 }
+
+
 
 
 Node* Parser::parse_lambda() {
-    ++pos; // Skip the '\' character
-    std::string param = parse_variable(); // Parse the parameter name
-    skip_whitespace();
-    if (current_char() == '.') {
-        ++pos; // Skip the '.' character
-    }
-    Node* body = parse_expression(); // Parse the body of the lambda
-    return new LambdaNode{param, body};
+  ++pos; // Skip the '\' character
+  std::string param = parse_variable(); // Parse the parameter name
+  skip_whitespace();
+  if (current_char() == '.') {
+    ++pos; // Skip the '.' character
+  } else {
+    throw std::runtime_error("Expected '.' after lambda parameter");
+  }
+  Node* body = parse_atom(); // Parse the body of the lambda
+  return new LambdaNode{param, body};
 }
+
 
 Node* Parser::parse(const std::string& input_str) {
     input = input_str;

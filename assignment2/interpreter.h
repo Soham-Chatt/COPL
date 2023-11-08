@@ -23,7 +23,7 @@ public:
   std::string is_conflict(std::unordered_set<std::string> bound_vars,
                    std::vector<std::string> free_vars);
 
-  void alpha_conversion(Node *body, std::string &param,
+  Node* alpha_conversion(Node *body, std::string &param,
                         std::unordered_set<std::string> &bound_vars);
 };
 

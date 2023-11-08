@@ -20,7 +20,7 @@ Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unord
   // Perform alpha conversion if necessary on the body of the lambda
   std::string conflict = is_conflict(bound_vars, free_vars);
   if (!conflict.empty()) {
-    alpha_conversion(lambda->body, conflict, bound_vars);
+    lambda->body = alpha_conversion(lambda->body, conflict, bound_vars);
   }
 
   std::cout << "Beta reduction: " << lambda->param << " -> " << argument->to_string() << std::endl;
@@ -29,18 +29,15 @@ Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unord
   return subst;
 }
 
-void Interpreter::alpha_conversion(Node *body, std::string &param, std::unordered_set<std::string> &bound_vars) {
+Node* Interpreter::alpha_conversion(Node *body, std::string &param, std::unordered_set<std::string> &bound_vars) {
   std::cout << "Alpha conversion on: " << param << std::endl;
   std::string new_var = unique_var(param, bound_vars);
 
-  std::cout << "New variable: " << new_var << std::endl;
   body = substitute(body, param, new VariableNode{new_var}, bound_vars);
   if(auto l = dynamic_cast<LambdaNode *>(body)) {
-    std::cout << "Replacing " << l->param;
     l->param = new_var;
-    std::cout << " with " << l->param << std::endl;
   }
-  //aram = new_var;
+  return body;
 }
 
 
@@ -50,6 +47,7 @@ Node *Interpreter::eval(Node *node, int &iterations) {
   }
 
   iterations++;
+
   std::unordered_set<std::string> bound_vars;
   std::vector<std::string> free_vars;
 
@@ -58,7 +56,6 @@ Node *Interpreter::eval(Node *node, int &iterations) {
     Node *right = eval(a->right->copy(), iterations);
     std::cout << "Application: " << left->to_string() << " " << right->to_string() << std::endl;
     if (auto l = dynamic_cast<LambdaNode *>(left)) {
-
       Node *subst = beta_reduction(l, right, bound_vars, free_vars);
       delete left;
       delete right;
