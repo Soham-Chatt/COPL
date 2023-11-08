@@ -2,7 +2,7 @@
 
 const int MAX_ITERATIONS = 10001;
 
-std::string Interpreter::is_conflict(std::unordered_set<std::string> bound_vars, std::vector<std::string> free_vars) {
+std::string Interpreter::is_conflict(std::unordered_set<std::string> bound_vars, const std::unordered_set<std::string>& free_vars) {
   // Check if a free var is found in bound var
   for (auto &var : free_vars) {
     if (bound_vars.find(var) != bound_vars.end()) {
@@ -12,8 +12,7 @@ std::string Interpreter::is_conflict(std::unordered_set<std::string> bound_vars,
   return "";
 }
 
-Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars, std::vector<std::string> &free_vars) {
-  reset(bound_vars);
+Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unordered_set<std::string> &bound_vars, std::unordered_set<std::string> &free_vars) {
   find_bound_vars(lambda->body, bound_vars);
   find_free_vars(argument, free_vars);
 
@@ -23,14 +22,12 @@ Node *Interpreter::beta_reduction(LambdaNode *lambda, Node *argument, std::unord
     lambda->body = alpha_conversion(lambda->body, conflict, bound_vars);
   }
 
-//  std::cout << "Beta reduction: " << lambda->param << " -> " << argument->to_string() << std::endl;
   Node *subst = substitute(lambda->body->copy(), lambda->param, argument, bound_vars);
 
   return subst;
 }
 
 Node* Interpreter::alpha_conversion(Node *body, std::string &param, std::unordered_set<std::string> &bound_vars) {
-//  std::cout << "Alpha conversion on: " << param << std::endl;
   std::string new_var = unique_var(param, bound_vars);
 
   body = substitute(body, param, new VariableNode{new_var}, bound_vars);
@@ -48,13 +45,12 @@ Node *Interpreter::eval(Node *node, int &iterations) {
 
   iterations++;
 
-  std::unordered_set<std::string> bound_vars;
-  std::vector<std::string> free_vars;
+  std::unordered_set<std::string> bound_vars = {};
+  std::unordered_set<std::string> free_vars = {};
 
   if (auto a = dynamic_cast<ApplicationNode *>(node)) {
     Node *left = eval(a->left->copy(), iterations);
     Node *right = eval(a->right->copy(), iterations);
-//    std::cout << "Application: " << left->to_string() << " " << right->to_string() << std::endl;
     if (auto l = dynamic_cast<LambdaNode *>(left)) {
       Node *subst = beta_reduction(l, right, bound_vars, free_vars);
       delete left;
@@ -72,7 +68,6 @@ Node *Interpreter::substitute(Node *node, const std::string &var, Node* value, s
   // Substitute all var with value
   if (auto v = dynamic_cast<VariableNode *>(node)) {
     if (v->name == var) {
-//        std::cout << "Substitute: " << var << " -> " << value->to_string() << std::endl;
         return value->copy();
     }
     return new VariableNode{v->name};
@@ -110,13 +105,9 @@ void Interpreter::find_bound_vars(Node *node, std::unordered_set<std::string> &b
   }
 }
 
-void Interpreter::reset(std::unordered_set<std::string> &bound_vars) {
-  bound_vars.clear();
-}
-
-void Interpreter::find_free_vars(Node* node, std::vector<std::string> &free_vars) {
+void Interpreter::find_free_vars(Node* node, std::unordered_set<std::string> &free_vars) {
   if (auto v = dynamic_cast<VariableNode *>(node)) {
-    free_vars.push_back(v->name);
+    free_vars.insert(v->name);
   } else if (auto l = dynamic_cast<LambdaNode *>(node)) {
     find_free_vars(l->body, free_vars);
   } else if (auto a = dynamic_cast<ApplicationNode *>(node)) {
