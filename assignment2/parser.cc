@@ -149,7 +149,6 @@ std::string generate_dot(Node* node) {
   std::ostringstream out;
 
   if (!node) return "";
-
   int cur_id = counter++;
   std::string label;
 
