@@ -7,7 +7,7 @@ std::string VariableNode::to_string() const {
     return name;
 }
 
-LambdaNode::LambdaNode(const std::string& param, Node* body) : param(param), body(body) { /*...*/ }
+LambdaNode::LambdaNode(const std::string& param, Node* body) : param(param), body(body) {}
 std::string LambdaNode::to_string() const {
     return "\\" + param + "." + body->to_string();
 }
@@ -24,42 +24,119 @@ ApplicationNode::~ApplicationNode() {
     delete right;
 }
 
-char Parser::current_char() {
-    return pos < input.size() ? input[pos] : '\0';
+TypeNode::TypeNode(const std::string& body) : body(body) {}
+
+std::string TypeNode::to_string() const {
+  return body;
 }
 
-void Parser::skip_whitespace() {
-    while (pos < input.size() && std::isspace(input[pos])) {
-        ++pos;
+JudgementNode::JudgementNode(Node *left, Node *right) : left(left), right(right) {}
+
+std::string JudgementNode::to_string() const {
+  return "(" + left->to_string() + " : " + right->to_string() + ")";
+}
+
+JudgementNode::~JudgementNode() {
+  delete left;
+  delete right;
+}
+
+std::vector<Token> Parser::tokenize(const std::string& inputString) {
+  int lpos = 0;
+  while (lpos < inputString.length()) {
+    char current = inputString[lpos];
+
+    if (std::isspace(current)) {
+      lpos++;
+      continue;
     }
-}
 
-std::string Parser::parse_variable() {
-    skip_whitespace();
-    std::string var;
-    if (pos < input.size() && std::isalpha(input[pos])) {
-        var += input[pos];
-        ++pos;
+    if (current == '\\') {
+      tokens.push_back({TokenType::Lambda, "\\"});
+      lpos++;
+    } else if (current == '(') {
+      tokens.push_back({TokenType::LParen, "("});
+      lpos++;
+    } else if (current == ')') {
+      tokens.push_back({TokenType::RParen, ")"});
+      lpos++;
+    } else if (current == '.') {
+      tokens.push_back({TokenType::Dot, "."});
+      lpos++;
+    } else if (std::isalpha(current)) {
+      std::string value;
+      do {
+        value += inputString[lpos++];
+      } while (lpos < inputString.length() && std::isalnum(inputString[lpos]));
+
+      if (std::isupper(value[0])) {
+        tokens.push_back({TokenType::UVar, value});
+      } else {
+        tokens.push_back({TokenType::LVar, value});
+      }
+    } else if (current == '-' && lpos + 1 < inputString.length() && inputString[lpos + 1] == '>') {
+      tokens.push_back({TokenType::Arrow, "->"});
+      lpos += 2; // Skip past '->'
     } else {
-        throw std::runtime_error("Variable must start with an alphabetic character");
+      throw std::runtime_error("Unexpected token");
     }
+  }
 
-    while (pos < input.size() && (std::isalpha(input[pos]) || std::isdigit(input[pos]))) {
-        var += input[pos];
-        ++pos;
+  tokens.push_back({TokenType::End, ""});
+  return tokens;
+}
+
+Node* Parser::parse_judgement() {
+  Node* expr = parse_expression();
+
+  if (tokens[pos].value == ":") {
+    pos++; // consume ':'
+    
+    Node* type = parse_type();
+    return new JudgementNode(expr, type);
+  } else {
+    return expr;
+  }
+}
+
+Node* Parser::parse_type() {
+  
+  // uvar
+  if (tokens[pos].type == TokenType::UVar) {
+    return new TypeNode(tokens[pos++].value);
+  }
+  // ( type )
+  else if (tokens[pos].value == "(") {
+    pos++; // consume '->'
+    
+    Node* type = parse_type();
+    if (tokens[pos].value != ")") {
+      throw std::runtime_error("Expected ')'");
     }
-    return var;
+    return new TypeNode(tokens[pos].value);
+  }
+  // type -> type
+  else {
+    Node* leftType = parse_type();
+    if (tokens[pos].type != TokenType::Arrow) {
+      throw std::runtime_error("Expected '->' in type expression");
+    }
+    pos++; // consume '->'
+    Node* rightType = parse_type();
+
+    return new TypeNode(leftType->to_string() + " -> " + rightType->to_string());
+  }
 }
 
 Node* Parser::parse_expression() {
-  skip_whitespace();
+  
 
   Node* expr = parse_atom();
 
   while (true) {
-    skip_whitespace();
+    
     // Check if the current character is the start of a new atom
-    if (current_char() == '(' || std::isalpha(current_char())) {
+    if (tokens[pos].value == "(" || std::isalpha(tokens[pos].value[0])) {
       Node* right = parse_atom();
       expr = new ApplicationNode(expr, right);
     } else {
@@ -70,36 +147,25 @@ Node* Parser::parse_expression() {
   return expr;
 }
 
-
-bool is_lambda_char(wchar_t ch) {
-    return ch == '\\';
-}
-
-bool is_variable_start_char(wchar_t ch) {
-    return std::isalpha(ch);
-}
-
-bool is_open_bracket(wchar_t ch) {
-    return ch == '(';
-}
 Node* Parser::parse_atom() {
-  skip_whitespace();
-  wchar_t ch = current_char();
+  
+  std::string str = tokens[pos].value;
 
-  if (is_lambda_char(ch)) {
-    return parse_lambda();
-  } else if (is_open_bracket(ch)) {
-    ++pos; // consume '('
+  if (tokens[pos].type == TokenType::LVar) {
+    return new VariableNode{tokens[pos].value};
+  } else if (tokens[pos].type == TokenType::UVar){
+    return new VariableNode{tokens[pos].value};
+  } else if (tokens[pos].type == TokenType::LParen){
+    pos++; // consume '('
     Node* node = parse_expression(); // parse expression within the brackets
-    skip_whitespace();
-    if (current_char() == ')') {
-      ++pos; // consume ')'
+    if (tokens[pos].type == TokenType::RParen) {
+      pos++; // consume ')'
     } else {
       throw std::runtime_error("Expected ')'");
     }
     return node; // the expression inside the brackets is treated as one atom
-  } else if (is_variable_start_char(ch)) {
-    return new VariableNode{parse_variable()};
+  } else if (tokens[pos].type == TokenType::Lambda) {
+    return parse_lambda();
   } else {
     throw std::runtime_error("Unexpected character encountered");
   }
@@ -107,12 +173,14 @@ Node* Parser::parse_atom() {
 
 
 Node* Parser::parse_lambda() {
-  ++pos; // Skip the '\' character
-  std::string param = parse_variable(); // Parse the parameter name
-  skip_whitespace();
-  if (current_char() == '.') {
-    ++pos; // Skip the '.' character
+  pos++; // Skip the '\' character
+  std::string param = tokens[pos].value; // Parse the parameter name
+  
+  if (tokens[pos].value[0] == '^') {
+    pos++; // Skip the '^' character
   }
+  
+  Node* type = parse_type(); // Parse the type of the parameter
   Node* body = parse_atom(); // Parse the body of the lambda
   return new LambdaNode{param, body};
 }
@@ -121,9 +189,9 @@ Node* Parser::parse_lambda() {
 Node* Parser::parse(const std::string& input_str) {
     input = input_str;
     pos = 0;
-    Node* result = parse_expression();
+    tokenize(input);
+    Node* result = parse_judgement();
 
-    skip_whitespace();
     if (pos < input.size()) {
         throw std::runtime_error("Unexpected character at end of input");
     }
