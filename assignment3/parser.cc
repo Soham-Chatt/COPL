@@ -151,9 +151,7 @@ Node* Parser::parse_atom() {
   
   std::string str = tokens[pos].value;
 
-  if (tokens[pos].type == TokenType::LVar) {
-    return new VariableNode{tokens[pos].value};
-  } else if (tokens[pos].type == TokenType::UVar){
+  if (tokens[pos].type == TokenType::LVar || tokens[pos].type == TokenType::UVar) {
     return new VariableNode{tokens[pos].value};
   } else if (tokens[pos].type == TokenType::LParen){
     pos++; // consume '('
