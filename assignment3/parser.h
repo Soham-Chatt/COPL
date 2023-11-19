@@ -34,16 +34,19 @@ public:
 class LambdaNode : public Node {
 public:
   std::string param;
+  Node* type;
   Node* body;
-  LambdaNode(const std::string& param, Node* body);
+
+  LambdaNode(const std::string& param, Node* type, Node* body); // Updated constructor
 
   std::string to_string() const override;
   Node* copy() const override {
-    return new LambdaNode(param, body->copy());
+    return new LambdaNode(param, type ? type->copy() : nullptr, body->copy());
   }
 
   ~LambdaNode();
 };
+
 
 class ApplicationNode : public Node {
 public:
@@ -86,7 +89,7 @@ public:
 };
 
 enum class TokenType {
-  Lambda, Arrow, LParen, RParen, Dot, End, LVar, UVar
+  Lambda, Arrow, LParen, RParen, Dot, End, LVar, UVar, Caret, Colon
 };
 
 struct Token {
@@ -97,7 +100,7 @@ struct Token {
 class Parser {
 public:
     Node* parse(const std::string& input_str);
-    std::vector<Token> tokenize(const std::string& inputString);
+    void tokenize(const std::string& inputString);
 
 private:
     std::string input;

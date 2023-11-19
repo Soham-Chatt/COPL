@@ -7,12 +7,17 @@ std::string VariableNode::to_string() const {
     return name;
 }
 
-LambdaNode::LambdaNode(const std::string& param, Node* body) : param(param), body(body) {}
+LambdaNode::LambdaNode(const std::string& param, Node* type, Node* body)
+    : param(param), type(type), body(body) {}
+
 std::string LambdaNode::to_string() const {
-    return "\\" + param + "." + body->to_string();
+  std::string typeStr = type ? type->to_string() : "";
+  return "\\" + param + (typeStr.empty() ? "" : " ^ " + typeStr) + "." + body->to_string();
 }
+
 LambdaNode::~LambdaNode() {
-    delete body;
+  delete body;
+  delete type;
 }
 
 ApplicationNode::ApplicationNode(Node* left, Node* right) : left(left), right(right) {}
@@ -41,15 +46,15 @@ JudgementNode::~JudgementNode() {
   delete right;
 }
 
-std::vector<Token> Parser::tokenize(const std::string& inputString) {
-  int lpos = 0;
+void Parser::tokenize(const std::string& inputString) {
+  size_t lpos = 0;
   while (lpos < inputString.length()) {
     char current = inputString[lpos];
-
     if (std::isspace(current)) {
       lpos++;
       continue;
     }
+    std::cout << "Current: " << current << std::endl;
 
     if (current == '\\') {
       tokens.push_back({TokenType::Lambda, "\\"});
@@ -62,6 +67,12 @@ std::vector<Token> Parser::tokenize(const std::string& inputString) {
       lpos++;
     } else if (current == '.') {
       tokens.push_back({TokenType::Dot, "."});
+      lpos++;
+    } else if (current == '^') {
+      tokens.push_back({TokenType::Caret, "^"});
+      lpos++;
+    } else if (current == ':') {
+      tokens.push_back({TokenType::Colon, ":"});
       lpos++;
     } else if (std::isalpha(current)) {
       std::string value;
@@ -83,7 +94,6 @@ std::vector<Token> Parser::tokenize(const std::string& inputString) {
   }
 
   tokens.push_back({TokenType::End, ""});
-  return tokens;
 }
 
 Node* Parser::parse_judgement() {
@@ -100,43 +110,45 @@ Node* Parser::parse_judgement() {
 }
 
 Node* Parser::parse_type() {
-  
-  // uvar
   if (tokens[pos].type == TokenType::UVar) {
+    // Handle untyped variable
     return new TypeNode(tokens[pos++].value);
-  }
-  // ( type )
-  else if (tokens[pos].value == "(") {
-    pos++; // consume '->'
-    
-    Node* type = parse_type();
-    if (tokens[pos].value != ")") {
+  } else if (tokens[pos].type == TokenType::LParen) {
+    // Handle parentheses
+    pos++; // Consume '('
+    Node* innerType = parse_type(); // Parse the inner type expression
+
+    if (tokens[pos].type != TokenType::RParen) {
       throw std::runtime_error("Expected ')'");
     }
-    return new TypeNode(tokens[pos].value);
-  }
-  // type -> type
-  else {
+    pos++; // Consume ')'
+
+    // Check for '->' after ')'
+    if (tokens[pos].type == TokenType::Arrow) {
+      pos++; // Consume '->'
+      Node* rightType = parse_type();
+      return new TypeNode(innerType->to_string() + " -> " + rightType->to_string());
+    } else {
+      return innerType;
+    }
+  } else {
+    // Handle type -> type
     Node* leftType = parse_type();
     if (tokens[pos].type != TokenType::Arrow) {
       throw std::runtime_error("Expected '->' in type expression");
     }
-    pos++; // consume '->'
+    pos++; // Consume '->'
     Node* rightType = parse_type();
-
     return new TypeNode(leftType->to_string() + " -> " + rightType->to_string());
   }
 }
 
 Node* Parser::parse_expression() {
-  
-
   Node* expr = parse_atom();
 
   while (true) {
-    
     // Check if the current character is the start of a new atom
-    if (tokens[pos].value == "(" || std::isalpha(tokens[pos].value[0])) {
+    if (tokens[pos].type == TokenType::LParen || std::isalpha(tokens[pos].value[0])) {
       Node* right = parse_atom();
       expr = new ApplicationNode(expr, right);
     } else {
@@ -152,7 +164,7 @@ Node* Parser::parse_atom() {
   std::string str = tokens[pos].value;
 
   if (tokens[pos].type == TokenType::LVar || tokens[pos].type == TokenType::UVar) {
-    return new VariableNode{tokens[pos].value};
+    return new VariableNode{tokens[pos++].value};
   } else if (tokens[pos].type == TokenType::LParen){
     pos++; // consume '('
     Node* node = parse_expression(); // parse expression within the brackets
@@ -165,6 +177,7 @@ Node* Parser::parse_atom() {
   } else if (tokens[pos].type == TokenType::Lambda) {
     return parse_lambda();
   } else {
+    std::cout << "Unexpected character: " << tokens[pos].value << std::endl;
     throw std::runtime_error("Unexpected character encountered");
   }
 }
@@ -172,42 +185,38 @@ Node* Parser::parse_atom() {
 
 Node* Parser::parse_lambda() {
   pos++; // Skip the '\' character
-  std::string param = tokens[pos].value; // Parse the parameter name
-  
-  if (tokens[pos].value[0] == '^') {
-    pos++; // Skip the '^' character
+  if (tokens[pos].type != TokenType::LVar) {
+    throw std::runtime_error("Expected lambda parameter");
   }
-  
-  Node* type = parse_type(); // Parse the type of the parameter
-  Node* body = parse_atom(); // Parse the body of the lambda
-  return new LambdaNode{param, body};
-}
+  std::string param = tokens[pos++].value; // Consume the parameter
 
+  Node* type = nullptr;
+  if (tokens[pos].type == TokenType::Caret) {
+    pos++; // Consume '^'
+    type = parse_type(); // Parse the type
+  }
+
+  // Consume '.' if present
+  if (tokens[pos].type == TokenType::Dot) {
+    pos++; // Consume '.'
+  }
+
+  Node* body = parse_expression(); // Parse the body of the lambda
+  return new LambdaNode(param, type, body); // Pass the type to the constructor
+}
 
 Node* Parser::parse(const std::string& input_str) {
     input = input_str;
     pos = 0;
+    std::cout << "Expression: " << input << std::endl;
     tokenize(input);
     Node* result = parse_judgement();
 
-    if (pos < input.size()) {
+    if (pos < tokens.size() && tokens[pos].type != TokenType::End) {
         throw std::runtime_error("Unexpected character at end of input");
     }
 
     return result;
-}
-
-void assign_depth(Node* node, int depth) {
-    if (!node) return;
-
-    node->depth = depth;
-
-    if (auto l = dynamic_cast<LambdaNode*>(node)) {
-        assign_depth(l->body, depth+1);
-    } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
-        assign_depth(a->left, depth+1);
-        assign_depth(a->right, depth+1);
-    }
 }
 
 std::string generate_dot(Node* node) {
