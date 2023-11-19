@@ -2,9 +2,16 @@
 #include "parser.h"
 #include <sstream>
 
-VariableNode::VariableNode(const std::string& name) : name(name) {}
+VariableNode::VariableNode(const std::string& name, Node* type)
+    : name(name), type(type) {}
+
+VariableNode::~VariableNode() {
+  delete type;
+}
+
 std::string VariableNode::to_string() const {
-    return name;
+  std::string typeStr = type ? " ^ " + type->to_string() : "";
+  return name + typeStr;
 }
 
 LambdaNode::LambdaNode(const std::string& param, Node* type, Node* body)
@@ -54,7 +61,6 @@ void Parser::tokenize(const std::string& inputString) {
       lpos++;
       continue;
     }
-    std::cout << "Current: " << current << std::endl;
 
     if (current == '\\') {
       tokens.push_back({TokenType::Lambda, "\\"});
@@ -109,39 +115,36 @@ Node* Parser::parse_judgement() {
   }
 }
 
-Node* Parser::parse_type() {
+Node* Parser::parse_single_type() {
   if (tokens[pos].type == TokenType::UVar) {
-    // Handle untyped variable
     return new TypeNode(tokens[pos++].value);
   } else if (tokens[pos].type == TokenType::LParen) {
-    // Handle parentheses
     pos++; // Consume '('
     Node* innerType = parse_type(); // Parse the inner type expression
 
     if (tokens[pos].type != TokenType::RParen) {
-      throw std::runtime_error("Expected ')'");
+      throw std::runtime_error("Expected ')' but got '" + tokens[pos].value + "' instead.");
     }
     pos++; // Consume ')'
-
-    // Check for '->' after ')'
-    if (tokens[pos].type == TokenType::Arrow) {
-      pos++; // Consume '->'
-      Node* rightType = parse_type();
-      return new TypeNode(innerType->to_string() + " -> " + rightType->to_string());
-    } else {
-      return innerType;
-    }
+    return innerType;
   } else {
-    // Handle type -> type
-    Node* leftType = parse_type();
-    if (tokens[pos].type != TokenType::Arrow) {
-      throw std::runtime_error("Expected '->' in type expression");
-    }
-    pos++; // Consume '->'
-    Node* rightType = parse_type();
-    return new TypeNode(leftType->to_string() + " -> " + rightType->to_string());
+    throw std::runtime_error("Unexpected type token");
   }
 }
+
+Node* Parser::parse_type() {
+  Node* leftType = parse_single_type();
+  // Check for '->' to handle function types
+  while (tokens[pos].type == TokenType::Arrow) {
+    pos++; // Consume '->'
+    Node* rightType = parse_single_type();
+    leftType = new TypeNode(leftType->to_string() + " -> " + rightType->to_string());
+  }
+
+  return leftType;
+}
+
+
 
 Node* Parser::parse_expression() {
   Node* expr = parse_atom();
@@ -160,25 +163,32 @@ Node* Parser::parse_expression() {
 }
 
 Node* Parser::parse_atom() {
-  
   std::string str = tokens[pos].value;
+  if (tokens[pos].type == TokenType::LVar) {
+    std::string varName = tokens[pos++].value; // Consume the LVar
 
-  if (tokens[pos].type == TokenType::LVar || tokens[pos].type == TokenType::UVar) {
-    return new VariableNode{tokens[pos++].value};
+    // Check for caret after LVar
+    if (tokens[pos].type != TokenType::Caret) {
+      throw std::runtime_error("Expected '^' after variable '" + varName + "'");
+    }
+    pos++; // Consume '^'
+
+    Node* type = parse_type(); // Parse the type
+
+    return new VariableNode(varName, type);
   } else if (tokens[pos].type == TokenType::LParen){
     pos++; // consume '('
     Node* node = parse_expression(); // parse expression within the brackets
     if (tokens[pos].type == TokenType::RParen) {
       pos++; // consume ')'
     } else {
-      throw std::runtime_error("Expected ')'");
+      throw std::runtime_error("Expected ')' but got '" + tokens[pos].value + "' instead.");
     }
     return node; // the expression inside the brackets is treated as one atom
   } else if (tokens[pos].type == TokenType::Lambda) {
     return parse_lambda();
   } else {
-    std::cout << "Unexpected character: " << tokens[pos].value << std::endl;
-    throw std::runtime_error("Unexpected character encountered");
+    throw std::runtime_error("Unexpected character encountered: " + tokens[pos].value + "");
   }
 }
 
@@ -190,16 +200,11 @@ Node* Parser::parse_lambda() {
   }
   std::string param = tokens[pos++].value; // Consume the parameter
 
-  Node* type = nullptr;
-  if (tokens[pos].type == TokenType::Caret) {
-    pos++; // Consume '^'
-    type = parse_type(); // Parse the type
+  if (tokens[pos].type != TokenType::Caret) {
+    throw std::runtime_error("Missing type for lambda parameter");
   }
-
-  // Consume '.' if present
-  if (tokens[pos].type == TokenType::Dot) {
-    pos++; // Consume '.'
-  }
+  pos++; // Consume '^'
+  Node* type = parse_type(); // Parse the type
 
   Node* body = parse_expression(); // Parse the body of the lambda
   return new LambdaNode(param, type, body); // Pass the type to the constructor
@@ -208,7 +213,7 @@ Node* Parser::parse_lambda() {
 Node* Parser::parse(const std::string& input_str) {
     input = input_str;
     pos = 0;
-    std::cout << "Expression: " << input << std::endl;
+    tokens.clear();
     tokenize(input);
     Node* result = parse_judgement();
 

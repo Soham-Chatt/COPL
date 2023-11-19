@@ -23,11 +23,13 @@ public:
 class VariableNode : public Node {
 public:
   std::string name;
-  VariableNode(const std::string& name);
+  Node* type; // New member for type
 
-  std::string to_string() const override;
-  Node* copy() const override {
-    return new VariableNode(*this);
+  VariableNode(const std::string& name, Node* type = nullptr);
+  virtual ~VariableNode();
+  virtual std::string to_string() const override;
+  virtual Node* copy() const override {
+    return new VariableNode(name, type ? type->copy() : nullptr);
   }
 };
 
@@ -114,6 +116,8 @@ private:
   Node *parse_judgement();
 
   Node *parse_type();
+
+  Node *parse_single_type();
 };
 
 void print_tree(Node* node);

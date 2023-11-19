@@ -14,12 +14,10 @@ all: main
 run: main
 	./main
 
-pos:
-	make
+pos: main
 	./main positive.txt
 
-neg:
-	make
+neg: main
 	./main negative.txt
 
 # Target link objects
