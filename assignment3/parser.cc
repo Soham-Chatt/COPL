@@ -74,9 +74,6 @@ void Parser::tokenize(const std::string& inputString) {
     } else if (current == '.') {
       tokens.push_back({TokenType::Dot, "."});
       lpos++;
-    } else if (current == '^') {
-      tokens.push_back({TokenType::Caret, "^"});
-      lpos++;
     } else if (current == ':') {
       tokens.push_back({TokenType::Colon, ":"});
       lpos++;
@@ -94,6 +91,9 @@ void Parser::tokenize(const std::string& inputString) {
     } else if (current == '-' && lpos + 1 < inputString.length() && inputString[lpos + 1] == '>') {
       tokens.push_back({TokenType::Arrow, "->"});
       lpos += 2; // Skip past '->'
+    }  else if (current == '^') {
+      tokens.push_back({TokenType::Caret, "^"});
+      lpos++;
     } else {
       throw std::runtime_error("Unexpected token");
     }
@@ -115,7 +115,67 @@ Node* Parser::parse_judgement() {
   }
 }
 
+
+Node* Parser::parse_expression() {
+  Node* expr = parse_atom();
+
+  while (true) {
+    // Check if the current character is the start of a new atom
+    if (tokens[pos].type == TokenType::LParen || std::isalpha(tokens[pos].value[0])) {
+      Node* right = parse_atom();
+      expr = new ApplicationNode(expr, right);
+    } else {
+      break; // No more applications, exit loop
+    }
+  }
+
+  return expr;
+}
+
+Node* Parser::parse_atom() {
+  if (tokens[pos].type == TokenType::LVar) {
+    std::string varName = tokens[pos++].value; // Consume the LVar
+
+    Node* type = parse_type(); // Parse the type
+
+    return new VariableNode(varName, type);
+  } else if (tokens[pos].type == TokenType::LParen){
+    pos++; // consume '('
+    Node* node = parse_expression(); // parse expression within the brackets
+    if (tokens[pos].type == TokenType::RParen) {
+      pos++; // consume ')'
+    } else {
+      throw std::runtime_error("Expected ')' but got '" + tokens[pos].value + "' instead.");
+    }
+    return node; // the expression inside the brackets is treated as one atom
+  } else if (tokens[pos].type == TokenType::Lambda) {
+    return parse_lambda();
+  } else {
+    throw std::runtime_error("Unexpected character encountered: " + tokens[pos].value + "");
+  }
+}
+
+Node* Parser::parse_lambda() {
+  pos++; // Skip the '\' character
+  if (tokens[pos].type != TokenType::LVar) {
+    throw std::runtime_error("Expected lambda parameter");
+  }
+  std::string param = tokens[pos].value;
+  pos++; // Consume the parameter
+
+  if (tokens[pos].type != TokenType::Caret) {
+    throw std::runtime_error("Missing type for lambda parameter");
+  }
+  pos++; // Consume '^'
+
+  Node* type = parse_type(); // Parse the type
+
+  Node* body = parse_expression(); // Parse the body of the lambda
+  return new LambdaNode(param, type, body); // Pass the type to the constructor
+}
+
 Node* Parser::parse_single_type() {
+  std::cout << "Parsing single type: " << tokens[pos].value << '\n';
   if (tokens[pos].type == TokenType::UVar) {
     return new TypeNode(tokens[pos++].value);
   } else if (tokens[pos].type == TokenType::LParen) {
@@ -144,76 +204,11 @@ Node* Parser::parse_type() {
   return leftType;
 }
 
-
-
-Node* Parser::parse_expression() {
-  Node* expr = parse_atom();
-
-  while (true) {
-    // Check if the current character is the start of a new atom
-    if (tokens[pos].type == TokenType::LParen || std::isalpha(tokens[pos].value[0])) {
-      Node* right = parse_atom();
-      expr = new ApplicationNode(expr, right);
-    } else {
-      break; // No more applications, exit loop
-    }
-  }
-
-  return expr;
-}
-
-Node* Parser::parse_atom() {
-  std::string str = tokens[pos].value;
-  if (tokens[pos].type == TokenType::LVar) {
-    std::string varName = tokens[pos++].value; // Consume the LVar
-
-    // Check for caret after LVar
-    if (tokens[pos].type != TokenType::Caret) {
-      throw std::runtime_error("Expected '^' after variable '" + varName + "'");
-    }
-    pos++; // Consume '^'
-
-    Node* type = parse_type(); // Parse the type
-
-    return new VariableNode(varName, type);
-  } else if (tokens[pos].type == TokenType::LParen){
-    pos++; // consume '('
-    Node* node = parse_expression(); // parse expression within the brackets
-    if (tokens[pos].type == TokenType::RParen) {
-      pos++; // consume ')'
-    } else {
-      throw std::runtime_error("Expected ')' but got '" + tokens[pos].value + "' instead.");
-    }
-    return node; // the expression inside the brackets is treated as one atom
-  } else if (tokens[pos].type == TokenType::Lambda) {
-    return parse_lambda();
-  } else {
-    throw std::runtime_error("Unexpected character encountered: " + tokens[pos].value + "");
-  }
-}
-
-
-Node* Parser::parse_lambda() {
-  pos++; // Skip the '\' character
-  if (tokens[pos].type != TokenType::LVar) {
-    throw std::runtime_error("Expected lambda parameter");
-  }
-  std::string param = tokens[pos++].value; // Consume the parameter
-
-  if (tokens[pos].type != TokenType::Caret) {
-    throw std::runtime_error("Missing type for lambda parameter");
-  }
-  pos++; // Consume '^'
-  Node* type = parse_type(); // Parse the type
-
-  Node* body = parse_expression(); // Parse the body of the lambda
-  return new LambdaNode(param, type, body); // Pass the type to the constructor
-}
-
 Node* Parser::parse(const std::string& input_str) {
     input = input_str;
     pos = 0;
     tokens.clear();
+    std::cout << "Parsing: " << input << '\n';
     tokenize(input);
     Node* result = parse_judgement();
 
