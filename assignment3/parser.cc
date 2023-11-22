@@ -2,16 +2,12 @@
 #include "parser.h"
 #include <sstream>
 
-VariableNode::VariableNode(const std::string& name, Node* type)
-    : name(name), type(type) {}
+VariableNode::VariableNode(const std::string& name)
+    : name(name) {}
 
-VariableNode::~VariableNode() {
-  delete type;
-}
 
 std::string VariableNode::to_string() const {
-  std::string typeStr = type ? " ^ " + type->to_string() : "";
-  return name + typeStr;
+  return name;
 }
 
 LambdaNode::LambdaNode(const std::string& param, Node* type, Node* body)
@@ -105,14 +101,13 @@ void Parser::tokenize(const std::string& inputString) {
 Node* Parser::parse_judgement() {
   Node* expr = parse_expression();
 
-  if (tokens[pos].value == ":") {
-    pos++; // consume ':'
-    
-    Node* type = parse_type();
-    return new JudgementNode(expr, type);
-  } else {
-    return expr;
+  if (tokens[pos].type != TokenType::Colon) {
+    throw std::runtime_error("Missing type for judgement");
   }
+  pos++; // consume ':'
+
+  Node* type = parse_type();
+  return new JudgementNode(expr, type);
 }
 
 
@@ -136,9 +131,7 @@ Node* Parser::parse_atom() {
   if (tokens[pos].type == TokenType::LVar) {
     std::string varName = tokens[pos++].value; // Consume the LVar
 
-    Node* type = parse_type(); // Parse the type
-
-    return new VariableNode(varName, type);
+    return new VariableNode(varName);
   } else if (tokens[pos].type == TokenType::LParen){
     pos++; // consume '('
     Node* node = parse_expression(); // parse expression within the brackets
@@ -162,7 +155,6 @@ Node* Parser::parse_lambda() {
   }
   std::string param = tokens[pos].value;
   pos++; // Consume the parameter
-
   if (tokens[pos].type != TokenType::Caret) {
     throw std::runtime_error("Missing type for lambda parameter");
   }
@@ -175,7 +167,7 @@ Node* Parser::parse_lambda() {
 }
 
 Node* Parser::parse_single_type() {
-  std::cout << "Parsing single type: " << tokens[pos].value << '\n';
+//  std::cout << "Parsing single type: " << tokens[pos].value << '\n';
   if (tokens[pos].type == TokenType::UVar) {
     return new TypeNode(tokens[pos++].value);
   } else if (tokens[pos].type == TokenType::LParen) {
@@ -219,35 +211,38 @@ Node* Parser::parse(const std::string& input_str) {
     return result;
 }
 
-std::string generate_dot(Node* node) {
+std::string Parser::generate_dot(Node* node, int parent_id = -1) {
   static int counter = 0;
   std::ostringstream out;
 
   if (!node) return "";
+
   int cur_id = counter++;
-  std::string label;
+  std::string label = node->to_string();
 
-  if (auto v = dynamic_cast<VariableNode*>(node)) {
-    label = "Variable: " + v->name;
-  } else if (auto l = dynamic_cast<LambdaNode*>(node)) {
-    label = "Lambda: " + l->param;
-    int body_id = counter;
-    out << generate_dot(l->body);
-    out << cur_id << " -> " << body_id << ";\n";
+  if (parent_id != -1) {
+    // Draw an edge from the parent node to the current node
+    out << parent_id << " -> " << cur_id << ";\n";
+  }
+
+  if (auto l = dynamic_cast<LambdaNode*>(node)) {
+    // LambdaNode has a body and optionally a type
+    out << generate_dot(l->type, cur_id);
+    out << generate_dot(l->body, cur_id);
   } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
-    label = "Application";
-    int left_id = counter;
-    out << generate_dot(a->left);
-    out << cur_id << " -> " << left_id << ";\n";
-
-    int right_id = counter;
-    out << generate_dot(a->right);
-    out << cur_id << " -> " << right_id << ";\n";
+    // ApplicationNode has left and right children
+    out << generate_dot(a->left, cur_id);
+    out << generate_dot(a->right, cur_id);
+  } else if (auto j = dynamic_cast<JudgementNode*>(node)) {
+    // JudgementNode has left and right children
+    out << generate_dot(j->left, cur_id);
+    out << generate_dot(j->right, cur_id);
   }
 
   out << cur_id << " [label=\"" << label << "\"];\n";
   return out.str();
 }
+
 
 void print_tree(Node* node) {
     if (!node) return;

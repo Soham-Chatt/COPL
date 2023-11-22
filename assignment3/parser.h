@@ -23,13 +23,11 @@ public:
 class VariableNode : public Node {
 public:
   std::string name;
-  Node* type; // New member for type
 
-  VariableNode(const std::string& name, Node* type = nullptr);
-  virtual ~VariableNode();
-  virtual std::string to_string() const override;
-  virtual Node* copy() const override {
-    return new VariableNode(name, type ? type->copy() : nullptr);
+  VariableNode(const std::string& name);
+  std::string to_string() const override;
+  Node* copy() const override {
+    return new VariableNode(name);
   }
 };
 
@@ -76,6 +74,7 @@ public:
 };
 
 class JudgementNode : public Node {
+public:
   Node* left;
   Node* right;
 
@@ -104,6 +103,8 @@ public:
     Node* parse(const std::string& input_str);
     void tokenize(const std::string& inputString);
 
+  std::string generate_dot(Node *node, int parent_id);
+
 private:
     std::string input;
     size_t pos = 0;
@@ -118,9 +119,8 @@ private:
   Node *parse_type();
 
   Node *parse_single_type();
+
 };
 
 void print_tree(Node* node);
-void assign_depth(Node* node, int depth = 0);
-std::string generate_dot(Node* node);
 #endif //PARSER_H
