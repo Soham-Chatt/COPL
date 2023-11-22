@@ -203,12 +203,35 @@ Node* Parser::parse(const std::string& input_str) {
     std::cout << "Parsing: " << input << '\n';
     tokenize(input);
     Node* result = parse_judgement();
+//    if (!getDerivation(result)) throw std::runtime_error("Derivation incorrect");
 
     if (pos < tokens.size() && tokens[pos].type != TokenType::End) {
         throw std::runtime_error("Unexpected character at end of input");
     }
 
     return result;
+}
+
+bool Parser::getDerivation(Node* root) {
+  Node* left = dynamic_cast<JudgementNode*>(root)->left;
+  Node* right = dynamic_cast<JudgementNode*>(root)->right;
+  return (getType(left) == right);
+}
+
+Node* Parser::getType(Node* root) {
+  if (auto l = dynamic_cast<LambdaNode*>(root)) {
+    gamma_stack.push({l->param, l->type->to_string()});
+    return new TypeNode(l->type->to_string());
+  } else if (auto a = dynamic_cast<ApplicationNode*>(root)) {
+    Node* left = getType(a->left);
+    Node* right = getType(a->right);
+    return new TypeNode("Type");
+  } else if (auto v = dynamic_cast<VariableNode*>(root)) {
+    if (v->to_string() != gamma_stack.top().var) throw std::runtime_error("Variable not in scope");
+    return new TypeNode(gamma_stack.top().type);
+  } else {
+    throw std::runtime_error("Unexpected node type");
+  }
 }
 
 std::string Parser::generate_dot(Node* node, int parent_id = -1) {

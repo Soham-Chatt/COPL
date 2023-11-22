@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <cctype>
+#include <stack>
 
 class Node {
 public:
@@ -37,7 +38,7 @@ public:
   Node* type;
   Node* body;
 
-  LambdaNode(const std::string& param, Node* type, Node* body); // Updated constructor
+  LambdaNode(const std::string& param, Node* type, Node* body);
 
   std::string to_string() const override;
   Node* copy() const override {
@@ -98,6 +99,11 @@ struct Token {
   std::string value;
 };
 
+struct Gamma {
+  std::string var;
+  std::string type;
+};
+
 class Parser {
 public:
     Node* parse(const std::string& input_str);
@@ -109,6 +115,7 @@ private:
     std::string input;
     size_t pos = 0;
     std::vector<Token> tokens;
+    std::stack<Gamma> gamma_stack;
 
     Node* parse_expression();
     Node* parse_atom();
@@ -120,6 +127,9 @@ private:
 
   Node *parse_single_type();
 
+  bool getDerivation(Node *root);
+
+  Node *getType(Node *root);
 };
 
 void print_tree(Node* node);
