@@ -200,10 +200,9 @@ Node* Parser::parse(const std::string& input_str) {
     input = input_str;
     pos = 0;
     tokens.clear();
-    std::cout << "Parsing: " << input << '\n';
     tokenize(input);
     Node* result = parse_judgement();
-//    if (!getDerivation(result)) throw std::runtime_error("Derivation incorrect");
+    if (!getDerivation(result)) throw std::runtime_error("Derivation incorrect");
 
     if (pos < tokens.size() && tokens[pos].type != TokenType::End) {
         throw std::runtime_error("Unexpected character at end of input");
@@ -213,24 +212,42 @@ Node* Parser::parse(const std::string& input_str) {
 }
 
 bool Parser::getDerivation(Node* root) {
-  Node* left = dynamic_cast<JudgementNode*>(root)->left;
+  Node* left = getType(dynamic_cast<JudgementNode*>(root)->left);
   Node* right = dynamic_cast<JudgementNode*>(root)->right;
-  return (getType(left) == right);
+  return (left->to_string() == right->to_string());
+}
+
+std::pair<std::string, std::string> extractTypes(const std::string& str) {
+  size_t pos = str.find("->");
+  if (pos == std::string::npos) {
+    throw std::runtime_error("Invalid format. Expected '[Type] -> [Type]'");
+  }
+  std::string firstType = str.substr(0, pos - 1);
+  std::string secondType = str.substr(
+      pos + 3);
+
+  return {firstType, secondType};
 }
 
 Node* Parser::getType(Node* root) {
   if (auto l = dynamic_cast<LambdaNode*>(root)) {
     gamma_stack.push({l->param, l->type->to_string()});
-    return new TypeNode(l->type->to_string());
+    Node* temp = new TypeNode(l->type->to_string() + " -> " + getType(l->body)->to_string());
+    return temp;
   } else if (auto a = dynamic_cast<ApplicationNode*>(root)) {
     Node* left = getType(a->left);
     Node* right = getType(a->right);
-    return new TypeNode("Type");
+    std::pair<std::string, std::string> types = extractTypes(left->to_string());
+    if (types.first != right->to_string()) throw std::runtime_error("Type mismatch");
+    Node* temp = new TypeNode(types.second);
+    return temp;
   } else if (auto v = dynamic_cast<VariableNode*>(root)) {
     if (v->to_string() != gamma_stack.top().var) throw std::runtime_error("Variable not in scope");
-    return new TypeNode(gamma_stack.top().type);
+    std::string type = gamma_stack.top().type;
+    gamma_stack.pop();
+    return new TypeNode(type);
   } else {
-    throw std::runtime_error("Unexpected node type");
+    throw std::runtime_error("Unexpected node type: " + root->to_string());
   }
 }
 
