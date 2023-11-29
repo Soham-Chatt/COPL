@@ -21,14 +21,13 @@ int main(int argc, char *argv[]) {
 
   // Read line by line
   while (std::getline(inFile, line)) {
-    Node *root;
+    Node *root = nullptr;
     // Parse the line
     try {
       root = parser.parse(line);
 //      std::cout << parser.generate_dot(root, -1) << std::endl;
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
-      delete root;
       return 1;
     }
 

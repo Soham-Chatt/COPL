@@ -2,7 +2,7 @@
 CC = g++
 
 # Compilation parameters
-CompileParms = -c -Wall -std=c++14 -O2
+CompileParms = -c -g -Wall -std=c++14 -O2
 
 # Object files
 OBJS := $(patsubst %.cc,%.o,$(wildcard *.cc))

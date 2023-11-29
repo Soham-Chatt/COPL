@@ -242,6 +242,7 @@ Node* Parser::getType(Node* root) {
     Node* temp = new TypeNode(types.second);
     return temp;
   } else if (auto v = dynamic_cast<VariableNode*>(root)) {
+    if (gamma_stack.empty()) throw std::runtime_error("Variable has unknown type");
     if (v->to_string() != gamma_stack.top().var) throw std::runtime_error("Variable not in scope");
     std::string type = gamma_stack.top().type;
     gamma_stack.pop();
