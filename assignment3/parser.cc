@@ -218,13 +218,13 @@ bool Parser::getDerivation(Node* root) {
 }
 
 std::pair<std::string, std::string> Parser::extractTypes(const std::string& str) {
-  size_t pos = str.find("->");
-  if (pos == std::string::npos) {
+  size_t stringPos = str.find("->");
+  if (stringPos == std::string::npos) {
     throw std::runtime_error("Invalid format. Expected '[Type] -> [Type]'");
   }
-  std::string firstType = str.substr(0, pos - 1);
+  std::string firstType = str.substr(0, stringPos - 1);
   std::string secondType = str.substr(
-      pos + 3);
+      stringPos + 3);
 
   return {firstType, secondType};
 }
