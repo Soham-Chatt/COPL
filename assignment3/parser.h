@@ -45,7 +45,7 @@ public:
     return new LambdaNode(param, type ? type->copy() : nullptr, body->copy());
   }
 
-  ~LambdaNode();
+  ~LambdaNode() override;
 };
 
 
@@ -60,7 +60,7 @@ public:
     return new ApplicationNode(left->copy(), right->copy());
   }
 
-  ~ApplicationNode();
+  ~ApplicationNode() override;
 };
 
 class TypeNode : public Node {
@@ -84,7 +84,7 @@ public:
     return new JudgementNode(left->copy(), right->copy());
   }
 
-  ~JudgementNode();
+  ~JudgementNode() override;
 
 public:
   JudgementNode(Node* left, Node* right);

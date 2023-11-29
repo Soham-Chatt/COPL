@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 
   // Read line by line
   while (std::getline(inFile, line)) {
-    Node *root = nullptr;
+    Node *root;
     // Parse the line
     try {
       root = parser.parse(line);
