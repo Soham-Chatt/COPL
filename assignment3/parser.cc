@@ -217,7 +217,7 @@ bool Parser::getDerivation(Node* root) {
   return (left->to_string() == right->to_string());
 }
 
-std::pair<std::string, std::string> extractTypes(const std::string& str) {
+std::pair<std::string, std::string> Parser::extractTypes(const std::string& str) {
   size_t pos = str.find("->");
   if (pos == std::string::npos) {
     throw std::runtime_error("Invalid format. Expected '[Type] -> [Type]'");

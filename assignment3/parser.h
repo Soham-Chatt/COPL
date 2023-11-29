@@ -130,6 +130,8 @@ private:
   bool getDerivation(Node *root);
 
   Node *getType(Node *root);
+
+  std::pair<std::string, std::string> extractTypes(const std::string &str);
 };
 
 void print_tree(Node* node);
