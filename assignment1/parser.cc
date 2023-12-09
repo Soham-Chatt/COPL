@@ -1,202 +1,142 @@
-// parser.cc
 #include "parser.h"
-#include <sstream>
 
 VariableNode::VariableNode(const std::string& name) : name(name) {}
+
 std::string VariableNode::to_string() const {
-    return name;
+  return name;
 }
 
-LambdaNode::LambdaNode(const std::string& param, Node* body) : param(param), body(body) { /*...*/ }
-std::string LambdaNode::to_string() const {
-    return "\\" + param + "." + body->to_string();
-}
-LambdaNode::~LambdaNode() {
-    delete body;
-}
+LambdaNode::LambdaNode(const std::string& param, std::unique_ptr<Node> body)
+    : param(param), body(std::move(body)) {}
 
-ApplicationNode::ApplicationNode(Node* left, Node* right) : left(left), right(right) {}
-std::string ApplicationNode::to_string() const {
-    return "(" + left->to_string() + " " + right->to_string() + ")";
-}
-ApplicationNode::~ApplicationNode() {
-    delete left;
-    delete right;
-}
+ApplicationNode::ApplicationNode(std::unique_ptr<Node> left, std::unique_ptr<Node> right)
+    : left(std::move(left)), right(std::move(right)) {}
 
 char Parser::current_char() {
-    return pos < input.size() ? input[pos] : '\0';
+  return pos < input.size() ? input[pos] : '\0';
 }
 
 void Parser::skip_whitespace() {
-    while (pos < input.size() && std::isspace(input[pos])) {
-        ++pos;
-    }
+  while (pos < input.size() && std::isspace(input[pos])) {
+    ++pos;
+  }
 }
-
 std::string Parser::parse_variable() {
+  skip_whitespace();
+  std::string var;
+  if (pos < input.size() && std::isalpha(input[pos])) {
+    var += input[pos++];
+  } else {
+    throw std::runtime_error("Variable must start with an alphabetic character");
+  }
+  while (pos < input.size() && (std::isalpha(input[pos]) || std::isdigit(input[pos]))) {
+    var += input[pos++];
+  }
+  return var;
+}
+
+std::unique_ptr<Node> Parser::parse_expression() {
+  skip_whitespace();
+  auto expr = parse_atom();
+  while (true) {
     skip_whitespace();
-    std::string var;
-    if (pos < input.size() && std::isalpha(input[pos])) {
-        var += input[pos];
-        ++pos;
+    if (current_char() == '(' || std::isalpha(current_char())) {
+      auto right = parse_atom();
+      expr = std::make_unique<ApplicationNode>(std::move(expr), std::move(right));
     } else {
-        throw std::runtime_error("Variable must start with an alphabetic character");
+      break;
     }
-
-    while (pos < input.size() && (std::isalpha(input[pos]) || std::isdigit(input[pos]))) {
-        var += input[pos];
-        ++pos;
-    }
-    return var;
+  }
+  return expr;
 }
 
-Node* Parser::parse_expression() {
+std::unique_ptr<Node> Parser::parse_atom() {
+  skip_whitespace();
+  char ch = current_char();
+  if (ch == '\\') {
+    return parse_lambda();
+  } else if (ch == '(') {
+    ++pos;
+    auto node = parse_expression();
     skip_whitespace();
-
-    Node* node = parse_atom();
-
-    while (true) {
-        skip_whitespace();
-        // If the next character is a '(' or a letter then it must be the start of another expression
-        // Parse the right node because function node is left child and argument node is right child
-        if (current_char() == '(' || std::isalpha(current_char())) {
-            Node* right = parse_atom();
-            node = new ApplicationNode{node, right};
-        } else {
-            break;
-        }
+    if (current_char() != ')') {
+      throw std::runtime_error("Expected ')'");
     }
-
+    ++pos;
     return node;
+  } else if (std::isalpha(ch)) {
+    return std::make_unique<VariableNode>(parse_variable());
+  } else {
+    throw std::runtime_error("Unexpected character encountered");
+  }
 }
 
-bool is_lambda_char(wchar_t ch) {
-    return ch == '\\';
-}
+std::unique_ptr<Node> Parser::parse_lambda() {
+  ++pos; // Skip the '\' character
+  std::string param = parse_variable(); // Parse the parameter name
+  skip_whitespace();
 
-bool is_variable_start_char(wchar_t ch) {
-    return std::isalpha(ch);
-}
+  auto body = parse_atom(); // Parse the body of the lambda
 
-bool is_open_bracket(wchar_t ch) {
-    return ch == '(';
-}
-
-Node* Parser::parse_atom() {
-    skip_whitespace();
-
-    wchar_t ch = current_char();
-    if (is_lambda_char(ch)) {
-        return parse_lambda();
-    }
-    else if (is_open_bracket(ch)) {
-        ++pos;
-        Node* node = parse_expression();
-        skip_whitespace();
-        if (current_char() == ')') {
-            ++pos;
-            return node;
-        }
-        else {
-            throw std::runtime_error("Expected ')'");
-        }
-    }
-    else if (is_variable_start_char(ch)) {
-        return new VariableNode{parse_variable()};
-    }
-    else {
-        throw std::runtime_error("Unexpected character encountered");
-    }
+  return std::make_unique<LambdaNode>(param, std::move(body));
 }
 
 
-Node* Parser::parse_lambda() {
-    ++pos; // Skip the '\' character
-    std::string param = parse_variable(); // Parse the parameter name
-    skip_whitespace();
-    if (current_char() == '.') {
-        ++pos; // Skip the '.' character
-    }
-    Node* body = parse_expression(); // Parse the body of the lambda
-    return new LambdaNode{param, body};
+std::unique_ptr<Node> Parser::parse(const std::string& input_str) {
+  input = input_str;
+  pos = 0;
+  auto result = parse_expression();
+  if (pos < input.size()) {
+    throw std::runtime_error("Unexpected character at end of input");
+  }
+  return result;
 }
 
-Node* Parser::parse(const std::string& input_str) {
-    input = input_str;
-    pos = 0;
-    Node* result = parse_expression();
-
-    skip_whitespace();
-    if (pos < input.size()) {
-        throw std::runtime_error("Unexpected character at end of input");
-    }
-
-    return result;
+std::string LambdaNode::to_string() const {
+  return "\\" + param + "." + body->to_string();
 }
 
-void assign_depth(Node* node, int depth) {
-    if (!node) return;
-
-    node->depth = depth;
-
-    if (auto l = dynamic_cast<LambdaNode*>(node)) {
-        assign_depth(l->body, depth+1);
-    } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
-        assign_depth(a->left, depth+1);
-        assign_depth(a->right, depth+1);
-    }
+std::string ApplicationNode::to_string() const {
+  return "(" + left->to_string() + " " + right->to_string() + ")";
 }
 
-std::string generate_dot(Node* node) {
+void print_tree(const Node* node, int depth) {
+  if (!node) return;
+
+  for (int i = 0; i < depth; ++i) {
+    std::cout << "  ";
+  }
+
+  std::cout << node->to_string() << '\n';
+  if (auto l = dynamic_cast<const LambdaNode*>(node)) {
+    print_tree(l->body.get(), depth + 1);
+  } else if (auto a = dynamic_cast<const ApplicationNode*>(node)) {
+    print_tree(a->left.get(), depth + 1);
+    print_tree(a->right.get(), depth + 1);
+  }
+}
+
+std::string generate_dot(const Node* node) {
   static int counter = 0;
   std::ostringstream out;
-
   if (!node) return "";
-
   int cur_id = counter++;
-  std::string label;
+  std::string label = node->to_string();
 
-  if (auto v = dynamic_cast<VariableNode*>(node)) {
-    label = "Variable: " + v->name;
-  } else if (auto l = dynamic_cast<LambdaNode*>(node)) {
-    label = "Lambda: " + l->param;
+  if (auto l = dynamic_cast<const LambdaNode*>(node)) {
     int body_id = counter;
-    out << generate_dot(l->body);
+    out << generate_dot(l->body.get());
     out << cur_id << " -> " << body_id << ";\n";
-  } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
-    label = "Application";
+  } else if (auto a = dynamic_cast<const ApplicationNode*>(node)) {
     int left_id = counter;
-    out << generate_dot(a->left);
+    out << generate_dot(a->left.get());
     out << cur_id << " -> " << left_id << ";\n";
 
     int right_id = counter;
-    out << generate_dot(a->right);
+    out << generate_dot(a->right.get());
     out << cur_id << " -> " << right_id << ";\n";
   }
 
   out << cur_id << " [label=\"" << label << "\"];\n";
   return out.str();
-}
-
-void print_tree(Node* node) {
-    if (!node) return;
-
-    for(int i = 0; i < node->depth; ++i) {
-      std::cout << "  ";
-    }
-
-    if (auto v = dynamic_cast<VariableNode*>(node)) {
-        // If the node is a VariableNode, print the variable name
-      std::cout << "Variable: " << v->name << '\n';
-    } else if (auto l = dynamic_cast<LambdaNode*>(node)) {
-        // If the node is a LambdaNode, recursively print the body of the lambda
-      std::cout << "Lambda: " << l->param << '\n';
-      print_tree(l->body);
-    } else if (auto a = dynamic_cast<ApplicationNode*>(node)) {
-        // If the node is ApplicationNode, recursively print both the left and right child nodes
-      std::cout << "Application:\n";
-      print_tree(a->left);
-      print_tree(a->right);
-    }
 }

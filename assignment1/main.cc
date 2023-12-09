@@ -30,30 +30,20 @@ void parseAndEvaluateExpressions(const std::vector<std::string>& inputs, Parser&
     int exprNr = 1;
     // Iterating through each expression of input and keeping track of the expression number
     for (const auto& inp : inputs) {
-        Node* ast = nullptr;
+        std::unique_ptr<Node> ast = nullptr;
         try {
             ast = parser.parse(inp);
         } catch (const std::runtime_error& e) {
             std::cerr << "Expression " << exprNr << ": " << e.what() << '\n';
-            delete ast;
             exprNr++;
             continue;
         }
 
         // Displaying the expression number before printing the tree and the result
         std::cout << "Expression " << exprNr << ":\n";
-        assign_depth(ast);
-        print_tree(ast);
-
-        // Displaying the tree in dot format
-        std::string dot = "digraph G {\n";
-        dot += generate_dot(ast);
-        dot += "}\n";
-        std::cout << dot;
 
         std::cout << "Result: " << ast->to_string() << std::endl << std::endl;
 
-        delete ast;
         exprNr++; // Increment expression number
     }
 }
