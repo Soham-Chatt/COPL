@@ -2,7 +2,7 @@
 CC = g++
 
 # Compilation parameters
-CompileParms = -c -Wall -std=c++11 -O2
+CompileParms = -c -Wall -std=c++14 -O2
 
 # List of object files
 OBJS = main.o parser.o
