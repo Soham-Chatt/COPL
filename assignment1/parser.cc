@@ -76,7 +76,6 @@ std::unique_ptr<Node> Parser::parse_lambda() {
   std::string param = parse_variable(); // Parse the parameter name
   skip_whitespace();
 
-  // Directly parse the body without checking for a dot
   auto body = parse_atom(); // Parse the body of the lambda
 
   return std::make_unique<LambdaNode>(param, std::move(body));
