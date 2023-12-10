@@ -209,7 +209,7 @@ Node *Parser::parse(const std::string &input_str) {
   tokens.clear();
   tokenize(input);
   Node *result = parse_judgement();
-  if (!getDerivation(result)) throw std::runtime_error("Derivation incorrect");
+  if (!get_derivation(result)) throw std::runtime_error("Derivation incorrect");
 
   if (pos < tokens.size() && tokens[pos].type != TokenType::End) {
     throw std::runtime_error("Unexpected character at end of input");
@@ -218,13 +218,13 @@ Node *Parser::parse(const std::string &input_str) {
   return result;
 }
 
-bool Parser::getDerivation(Node *root) {
-  Node *left = getType(dynamic_cast<JudgementNode *>(root)->left);
+bool Parser::get_derivation(Node *root) {
+  Node *left = get_type(dynamic_cast<JudgementNode *>(root)->left);
   Node *right = dynamic_cast<JudgementNode *>(root)->right;
   return (left->to_string() == right->to_string());
 }
 
-std::pair<std::string, std::string> Parser::extractTypes(const std::string &str) {
+std::pair<std::string, std::string> Parser::extract_types(const std::string &str) {
   size_t stringPos = str.find("->");
   if (stringPos == std::string::npos) {
     throw std::runtime_error("Invalid format. Expected '[Type] -> [Type]'");
@@ -236,16 +236,16 @@ std::pair<std::string, std::string> Parser::extractTypes(const std::string &str)
   return {firstType, secondType};
 }
 
-Node *Parser::getType(Node *root) {
+Node *Parser::get_type(Node *root) {
   // Lambda Rule: Γ, x : A ⊢ M : B
   if (auto l = dynamic_cast<LambdaNode *>(root)) {
     gamma_stack.push({l->param, l->type->to_string()});
-    Node *temp = new TypeNode(l->type->to_string() + " -> " + getType(l->body)->to_string());
+    Node *temp = new TypeNode(l->type->to_string() + " -> " + get_type(l->body)->to_string());
     return temp;
   } else if (auto a = dynamic_cast<ApplicationNode *>(root)) { // Application Rule: Γ ⊢ M : A -> B    Γ ⊢ N : A
-    Node *left = getType(a->left);
-    Node *right = getType(a->right);
-    std::pair<std::string, std::string> types = extractTypes(left->to_string());
+    Node *left = get_type(a->left);
+    Node *right = get_type(a->right);
+    std::pair<std::string, std::string> types = extract_types(left->to_string());
     if (types.first != right->to_string()) throw std::runtime_error("Type mismatch");
     Node *temp = new TypeNode(types.second);
     return temp;

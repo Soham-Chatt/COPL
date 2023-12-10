@@ -134,11 +134,11 @@ private:
 
   Node *parse_single_type();
 
-  bool getDerivation(Node *root);
+  bool get_derivation(Node *root);
 
-  Node *getType(Node *root);
+  Node *get_type(Node *root);
 
-  std::pair<std::string, std::string> extractTypes(const std::string &str);
+  std::pair<std::string, std::string> extract_types(const std::string &str);
 };
 
 #endif //PARSER_H

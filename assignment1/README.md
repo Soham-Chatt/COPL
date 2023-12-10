@@ -24,24 +24,27 @@ This is a C++ program that implements a parser for lambda calculus expressions. 
 - **Parser**: Implements the parser with methods to parse lambda calculus expressions and build the AST.
 - **parse**: A public method initiating the parsing and returns the root of the AST.
 
-### Utility Functions
-- **current_char**: Gets the current character being parsed.
-- **skip_whitespace**: Skips whitespace in the input string.
+### Important Functions
 - **parse_variable**: Parses a variable from the input.
 - **parse_expression**: Parses an expression or a series of applications.
 - **parse_atom**: Parses an atom (variable, lambda, or bracket-enclosed expression).
 - **parse_lambda**: Parses a lambda expression from the input.
+A **generate_dot** function is also included and can be used added by the user in the main function
+but isn't used in the program. This is because we would otherwise have to use arguments which was not allowed for this assignment yet.
 
 ### Main Function
 - Reads an input from the user.
 - Creates a `Parser` instance and attempts to parse the input into an AST.
 - Handles parsing errors by catching exceptions and reporting error messages, cleaning up resources before exiting with status 1.
-- On successful parsing, prints the AST and a string representation of the parsed expression, exiting with status 0.
+- On successful parsing, prints an unambiguous form of the parsed expression, exiting with status 0.
 
 ### How to Run the Program
 Simply run the program with the following command:
-```make run``` 
+```make run```
 
+Included are a positives.txt and negatives.txt which can be automatically ran with the following commands:
+```make run``` or ```make neg```
 
 ```make clean``` will remove all object files and the executable.
+
 

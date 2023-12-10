@@ -4,18 +4,19 @@ CC = g++
 # Compilation parameters
 CompileParms = -g -c -Wall -std=c++11 -O2
 
-# List of object files
-OBJS = main.o parser.o interpreter.o
+# Object files
+OBJS := $(patsubst %.cc,%.o,$(wildcard *.cc))
 
 # Default target
 all: main
+build: main
 
 # Target to run the executable
-pos: main
-	./main positive.txt
+run: main
+	./main positives.txt
 
 neg: main
-	./main negative.txt
+	./main negatives.txt
 
 # Target to link the object files and create the main executable
 main: $(OBJS)

@@ -5,8 +5,8 @@
 #include <unordered_set>
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <file_name>" << std::endl;
+  if (argc > 3 || argc < 2) {
+    std::cerr << "Usage: " << argv[0] << " [file_name] <-d>" << std::endl;
     return 1;
   }
 
@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  bool debugMode = (argc == 3 && std::string(argv[2]) == "-d");
   std::string line;
   Parser parser;
 
@@ -26,6 +27,9 @@ int main(int argc, char *argv[]) {
     try {
       root = parser.parse(line);
       std::cout << "Parsed successfully: " << root->to_string() << std::endl;
+      if (debugMode) {
+        std::cout << "Dot Tree: \n" << parser.generate_dot(root, -1) << std::endl;
+      }
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
       return 1;

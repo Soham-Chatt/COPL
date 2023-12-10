@@ -66,6 +66,8 @@ class Parser {
 public:
   Node *parse(const std::string &input_str);
 
+  std::string generate_dot(Node *node);
+
 private:
   std::string input;
   size_t pos = 0;
@@ -82,9 +84,7 @@ private:
 
   Node *parse_lambda();
 
-  std::string generate_dot(Node *node);
 };
-
 
 
 #endif //PARSER_H

@@ -6,16 +6,18 @@
 #include <unordered_set>
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <file_name>" << std::endl;
+  if (argc > 3 || argc < 2) {
+    std::cerr << "Usage: " << argv[0] << " [file_name] <-d>" << std::endl;
     return 1;
   }
+
 
   std::ifstream inFile(argv[1]);
   if (!inFile) {
     std::cerr << "Cannot open input file: " << argv[1] << std::endl;
     return 1;
   }
+  bool debugMode = (argc == 3 && std::string(argv[2]) == "-d");
 
   std::string line;
   Parser parser;
@@ -29,6 +31,9 @@ int main(int argc, char *argv[]) {
     try {
       root = parser.parse(line);
       std::cout << "Parsed successfully: " << root->to_string() << std::endl;
+      if (debugMode) {
+        std::cout << "Dot Tree: \n" << parser.generate_dot(root) << std::endl;
+      }
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
       return 1;
@@ -46,7 +51,11 @@ int main(int argc, char *argv[]) {
       }
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
-      return 1;
+      if (std::string(e.what()) == "Maximum number of iterations reached") {
+        return 2;
+      } else {
+        return 1;
+      }
     }
 
     delete root;

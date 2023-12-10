@@ -15,10 +15,10 @@ run: main
 	./main
 
 pos: main
-	./main positive.txt
+	./main positives.txt
 
 neg: main
-	./main negative.txt
+	./main negatives.txt
 
 # Target link objects
 main: $(OBJS)
