@@ -1,11 +1,3 @@
-\ (missing variable after lambda)
-\x (missing expression after lambda abstraction)
-((x (missing closing parenthesis)
-() (missing expression after opening parenthesis)
-a (b (missing closing parenthesis)
-a (b c)) (input string not fully parsed)
-
-For copy-pasting:
 \
 \x
 ((x

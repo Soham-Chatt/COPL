@@ -14,6 +14,12 @@ all: main
 run: main
 	./main
 
+pos: main
+	./main < positive.txt
+
+neg: main
+	./main < negative.txt
+
 # Target to link the object files and create the main executable
 main: $(OBJS)
 	$(CC) -o main $(OBJS)

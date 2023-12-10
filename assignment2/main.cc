@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
       root = parser.parse(line);
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
-      continue;
+      return 1;
     }
 
     int iterations = 0;
@@ -39,11 +39,12 @@ int main(int argc, char *argv[]) {
       reduced = interpreter.eval(root, iterations);
       if (reduced) {
         std::cout << "Reduced expression: " << reduced->to_string() << std::endl;
-      } else {
+      } else {delete reduced;
         std::cout << "Could not reduce the expression further." << std::endl;
       }
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
+      return 1;
     }
 
     delete root;

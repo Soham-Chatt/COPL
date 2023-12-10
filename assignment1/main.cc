@@ -1,65 +1,20 @@
-// main.cc
 #include "parser.h"
-#include <iostream> // std::cout, std::cin, std::cerr
-#include <string> // std::string
-#include <vector> // For the (multi-line) expressions
-
-// Short introduction to the program
-void intro() {
-    std::cout << "This program is meant for parsing lambda calculus expressions.\n"
-                 "The program will parse the expression and print the abstract syntax tree and the result.\n"
-                 "The program will also print the expression number before printing the tree and the result.\n\n"
-                 "Enter lambda expressions to parse, one per line. Press enter on an empty line to finish.\n" <<
-                 std::endl;
-}
-
-void getInputs(std::vector<std::string>& inputs) {
-    std::string input;
-
-    // Get the expressions from the user
-    while (true) {
-        std::getline(std::cin, input);
-        if (input.empty()) {
-            break;
-        }
-        inputs.push_back(input);
-    }
-}
-
-void parseAndEvaluateExpressions(const std::vector<std::string>& inputs, Parser& parser) {
-    int exprNr = 1;
-    // Iterating through each expression of input and keeping track of the expression number
-    for (const auto& inp : inputs) {
-        std::unique_ptr<Node> ast = nullptr;
-        try {
-            ast = parser.parse(inp);
-        } catch (const std::runtime_error& e) {
-            std::cerr << "Expression " << exprNr << ": " << e.what() << '\n';
-            exprNr++;
-            continue;
-        }
-
-        // Displaying the expression number before printing the tree and the result
-        std::cout << "Expression " << exprNr << ":\n";
-
-        std::cout << "Result: " << ast->to_string() << std::endl << std::endl;
-
-        exprNr++; // Increment expression number
-    }
-}
+#include <iostream>
+#include <string>
 
 int main() {
-    intro();
+  Parser parser;
+  std::string expression;
 
-    std::vector<std::string> inputs;
-    getInputs(inputs);
+  while (std::getline(std::cin, expression)) {
+    try {
+      auto parsedExpression = parser.parse(expression);
+      std::cout << "Parsed successfully: " << parsedExpression->to_string() << std::endl;
+    } catch (const std::runtime_error &e) {
+      std::cerr << "Error: " << e.what() << std::endl;
+      return 1;
+    }
+  }
 
-    Parser parser;
-    parseAndEvaluateExpressions(inputs, parser);
-
-    return 0;
+  return 0;
 }
-
-
-
-
