@@ -39,7 +39,8 @@ int main(int argc, char *argv[]) {
       reduced = interpreter.eval(root, iterations);
       if (reduced) {
         std::cout << "Reduced expression: " << reduced->to_string() << std::endl;
-      } else {delete reduced;
+      } else {
+        delete reduced;
         std::cout << "Could not reduce the expression further." << std::endl;
       }
     } catch (std::runtime_error &e) {

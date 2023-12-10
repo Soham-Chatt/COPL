@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     // Parse the line
     try {
       root = parser.parse(line);
-//      std::cout << parser.generate_dot(root, -1) << std::endl;
+      std::cout << "Parsed successfully: " << root->to_string() << std::endl;
     } catch (std::runtime_error &e) {
       std::cerr << "Error: " << e.what() << std::endl;
       return 1;

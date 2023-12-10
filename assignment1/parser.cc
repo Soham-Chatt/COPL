@@ -1,12 +1,12 @@
 #include "parser.h"
 
-VariableNode::VariableNode(const std::string& name) : name(name) {}
+VariableNode::VariableNode(const std::string &name) : name(name) {}
 
 std::string VariableNode::to_string() const {
   return name;
 }
 
-LambdaNode::LambdaNode(const std::string& param, std::unique_ptr<Node> body)
+LambdaNode::LambdaNode(const std::string &param, std::unique_ptr<Node> body)
     : param(param), body(std::move(body)) {}
 
 ApplicationNode::ApplicationNode(std::unique_ptr<Node> left, std::unique_ptr<Node> right)
@@ -18,10 +18,12 @@ char Parser::current_char() {
 
 void Parser::skip_whitespace() {
   while (pos < input.size() && std::isspace(input[pos])) {
-    ++pos;
+    pos++;
   }
 }
+
 std::string Parser::parse_variable() {
+  // ⟨var⟩ ::= ⟨alphanum⟩ | ⟨var⟩ ⟨alphanum⟩
   skip_whitespace();
   std::string var;
   if (pos < input.size() && std::isalpha(input[pos])) {
@@ -36,6 +38,7 @@ std::string Parser::parse_variable() {
 }
 
 std::unique_ptr<Node> Parser::parse_expression() {
+  // ⟨expr⟩ ::= ⟨var⟩ | '(' ⟨expr⟩ ')' | '\' ⟨var⟩ ⟨expr⟩ | ⟨expr⟩ ⟨expr⟩
   skip_whitespace();
   auto expr = parse_atom();
   while (true) {
@@ -51,18 +54,20 @@ std::unique_ptr<Node> Parser::parse_expression() {
 }
 
 std::unique_ptr<Node> Parser::parse_atom() {
+  // ⟨atom⟩ ::= ⟨var⟩ | '(' ⟨expr⟩ ')' | '\' ⟨var⟩ ⟨expr⟩
   skip_whitespace();
   char ch = current_char();
+  // Pick the right parser based on the current character
   if (ch == '\\') {
     return parse_lambda();
   } else if (ch == '(') {
-    ++pos;
+    pos++;
     auto node = parse_expression();
     skip_whitespace();
     if (current_char() != ')') {
       throw std::runtime_error("Expected ')'");
     }
-    ++pos;
+    pos++;
     return node;
   } else if (std::isalpha(ch)) {
     return std::make_unique<VariableNode>(parse_variable());
@@ -72,7 +77,8 @@ std::unique_ptr<Node> Parser::parse_atom() {
 }
 
 std::unique_ptr<Node> Parser::parse_lambda() {
-  ++pos; // Skip the '\' character
+  // ⟨lambda⟩ ::= '\' ⟨var⟩ ⟨expr⟩
+  pos++; // Skip the '\' character
   std::string param = parse_variable(); // Parse the parameter name
   skip_whitespace();
 
@@ -81,8 +87,7 @@ std::unique_ptr<Node> Parser::parse_lambda() {
   return std::make_unique<LambdaNode>(param, std::move(body));
 }
 
-
-std::unique_ptr<Node> Parser::parse(const std::string& input_str) {
+std::unique_ptr<Node> Parser::parse(const std::string &input_str) {
   input = input_str;
   pos = 0;
   auto result = parse_expression();
@@ -100,34 +105,18 @@ std::string ApplicationNode::to_string() const {
   return "(" + left->to_string() + " " + right->to_string() + ")";
 }
 
-void print_tree(const Node* node, int depth) {
-  if (!node) return;
-
-  for (int i = 0; i < depth; ++i) {
-    std::cout << "  ";
-  }
-
-  std::cout << node->to_string() << '\n';
-  if (auto l = dynamic_cast<const LambdaNode*>(node)) {
-    print_tree(l->body.get(), depth + 1);
-  } else if (auto a = dynamic_cast<const ApplicationNode*>(node)) {
-    print_tree(a->left.get(), depth + 1);
-    print_tree(a->right.get(), depth + 1);
-  }
-}
-
-std::string generate_dot(const Node* node) {
+std::string Parser::generate_dot(const Node *node) {
   static int counter = 0;
   std::ostringstream out;
   if (!node) return "";
   int cur_id = counter++;
   std::string label = node->to_string();
 
-  if (auto l = dynamic_cast<const LambdaNode*>(node)) {
+  if (auto l = dynamic_cast<const LambdaNode *>(node)) {
     int body_id = counter;
     out << generate_dot(l->body.get());
     out << cur_id << " -> " << body_id << ";\n";
-  } else if (auto a = dynamic_cast<const ApplicationNode*>(node)) {
+  } else if (auto a = dynamic_cast<const ApplicationNode *>(node)) {
     int left_id = counter;
     out << generate_dot(a->left.get());
     out << cur_id << " -> " << left_id << ";\n";
