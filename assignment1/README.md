@@ -5,7 +5,7 @@
 - Working Correctly: Yes
 - Known Defects: None
 
-## Deviations from the Assignment
+## Deviations from the Assignment and Defects
 For some expressions, the output with parentheses is a bit off. However, this only has to do with the to_string methods.
 The actual AST is generated correctly and can be verified using the -d flag.
 We have adhered to the requirements of the assignment according to the **must** rules 
