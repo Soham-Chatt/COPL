@@ -7,7 +7,21 @@
 
 ## Deviations from the Assignment
 None. We have adhered to the requirements of the assignment according to the **must** rules 
-and have implemented **should** and **may** rules where possible.
+and have implemented the following additional features:
+**should**:
+- report an error
+- use the least amount of standard library code
+- terminate within a short amount of time
+- be whitespace insensitive
+- produce the exact same result when parsing its own output
+- be an unambiguous expression
+
+**may**:
+- accept multiple expressions, one per line
+- print an error to standard error
+- print understandable error messages
+- support a dot after the lambda abstraction variable
+- support a dot at any place where a closing parenthesis immediately followed by an opening parenthesis could make sense
 
 ## Program Explanation
 This is a C++ program that implements a parser for lambda calculus expressions. Below is a brief overview of the program structure:
