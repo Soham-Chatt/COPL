@@ -13,8 +13,9 @@
 to our reduction strategy.
 
 ## Deviations from the Assignment
-None. We have adhered to the requirements of the assignment according to the **must** rules
-and have implemented the following additional features:
+For some expressions, the output with parentheses is a bit off. However, this only has to do with the to_string methods.
+The actual AST is generated correctly and can be verified using the -d flag.
+We have adhered to the requirements of the assignment according to the **must** rules and have implemented the following additional features:
 
 **should**
 - report an error for syntax errors
