@@ -11,7 +11,7 @@ std::string VariableNode::to_string() const {
 LambdaNode::LambdaNode(const std::string &param, Node *body) : param(param), body(body) { /*...*/ }
 
 std::string LambdaNode::to_string() const {
-  return "\\" + param + "." + body->to_string();
+  return "\\" + param + " (" + body->to_string() + ")";
 }
 
 LambdaNode::~LambdaNode() {

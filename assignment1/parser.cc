@@ -98,7 +98,7 @@ std::unique_ptr<Node> Parser::parse(const std::string &input_str) {
 }
 
 std::string LambdaNode::to_string() const {
-  return "\\" + param + "." + body->to_string();
+  return "\\" + param + " (" + body->to_string() + ")";
 }
 
 std::string ApplicationNode::to_string() const {

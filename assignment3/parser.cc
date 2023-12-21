@@ -15,7 +15,7 @@ LambdaNode::LambdaNode(const std::string &param, Node *type, Node *body)
 
 std::string LambdaNode::to_string() const {
   std::string typeStr = type ? type->to_string() : "";
-  return "\\" + param + (typeStr.empty() ? "" : " ^ " + typeStr) + "." + body->to_string();
+  return "\\" + param + (typeStr.empty() ? "" : "^" + typeStr) + " " + body->to_string();
 }
 
 LambdaNode::~LambdaNode() {
@@ -43,7 +43,7 @@ std::string TypeNode::to_string() const {
 JudgementNode::JudgementNode(Node *left, Node *right) : left(left), right(right) {}
 
 std::string JudgementNode::to_string() const {
-  return "(" + left->to_string() + " : " + right->to_string() + ")";
+  return "(" + left->to_string() + ") : (" + right->to_string() + ")";
 }
 
 JudgementNode::~JudgementNode() {

@@ -12,9 +12,6 @@ all: main
 
 # Target for executable
 run: main
-	./main
-
-pos: main
 	./main positives.txt
 
 neg: main

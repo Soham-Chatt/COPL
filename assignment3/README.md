@@ -1,13 +1,28 @@
 ## Student Information
-- Student Numbers: 3692965 and 3638715
+- Students: Peter Branger (3692965) and Soham Chatterjee (3638715)
+- Class: Concepts of Programming Languages (4032CNPREY)
+- Group name: PeterBranger-SohamChatterjee
 
-## Program Status
-- Working Correctly: Yes
-- Known Defects: None
+## Software
+- gcc version: 11.4.0
+- OS: WSL/Ubuntu
 
 ## Deviations from the Assignment
 None. We have adhered to the requirements of the assignment according to the **must** rules
-and have implemented **should** and **may** rules where possible.
+and have implemented the following additional features:
+
+**should**
+- report an error for syntax errors
+- use the least amount of standard library code
+- output the judgment in an unambiguous and standardizes output format
+- be whitespace insensitive
+
+**may**
+- include an explanation of how the program works in the README
+- include positives and negatives files
+- process multiple judgements, one per line
+- print to standard error on exit status code 1
+- print understandable error messages
 
 ## Program Explanation
 This is a C++ program that implements a type-checker for lambda calculus expressions. Below is a brief overview of the program structure:

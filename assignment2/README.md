@@ -1,5 +1,11 @@
 ## Student Information
-- Student Numbers: 3692965 and 3638715
+- Students: Peter Branger (3692965) and Soham Chatterjee (3638715)
+- Class: Concepts of Programming Languages (4032CNPREY)
+- Group name: PeterBranger-SohamChatterjee
+
+## Software 
+- gcc version: 11.4.0
+- OS: WSL/Ubuntu
 
 ## Program Status
 - Working Correctly: Yes
@@ -8,7 +14,21 @@ to our reduction strategy.
 
 ## Deviations from the Assignment
 None. We have adhered to the requirements of the assignment according to the **must** rules
-and have implemented **should** and **may** rules where possible.
+and have implemented the following additional features:
+
+**should**
+- report an error for syntax errors
+- use the least amount of standard library code
+- alpha-conversions only where beta-reduction would otherwise lead to variable capture
+- be whitespace insensitive
+- accept only one expression in the input file (we assume this is incorrectly stated, as all other assignments have accepted multiple expressions, which is also what we have done)
+
+**may**
+- include an explanation of how the program works in the README
+- include positives and negatives files
+- exit with status code 2 whenever a limit on the number of reductions is reached
+- print to standard error on exit status code 1 or 2
+- print understandable error messages
 
 ## Program Explanation
 This is a C++ program that implements an interpreter for lambda calculus expressions. Below is a brief overview of the program structure:
@@ -22,7 +42,7 @@ As in assignment 1.
 As in assignment 1.
 
 #### `Interpreter` Class
-- **Interpreter**: Responsible for traversing and evaluating the AST.
+- **Interpreter**: Responsible for traversing and evaluating the AST using leftmost-outermost reduction.
 
 ### Important Functions
 - **beta_reduction**: Takes a lambda expression and an argument, performs beta-reduction, and returns the resulting node.
