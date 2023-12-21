@@ -21,7 +21,7 @@ and have implemented the following additional features:
 - accept multiple expressions, one per line
 - print an error to standard error
 - print understandable error messages
-- use the least amount of whitespace and parentheses in its output
+- use the least amount of whitespace in its output (while still being readable)
 - include an explanation of how the program works in the README
 - include positives and negatives files
 
