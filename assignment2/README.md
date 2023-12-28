@@ -51,6 +51,7 @@ As in assignment 1.
 - **eval**: Takes a node and evaluates it, returning the resulting node.
 - **substitute**: Takes a node and a variable name and substitutes all instances of the variable with the node, returning the resulting node.
 - **unique_var**: Takes a node and a variable name and returns a unique variable name based on the given variable name.
+
 A **generate_dot** function is also included and can be used added by the user in the main function by using the argument -d.
 
 ### Main Function

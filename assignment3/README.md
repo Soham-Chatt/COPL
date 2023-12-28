@@ -49,6 +49,7 @@ Parses the input into an AST for a simply-typed lambda calculus expression.
 - getDerivation: Checks if the derivation of a judgement node is correct.
 - extractTypes: Extracts types from a string, useful in type checking.
 - getType: Determines the type of given node.
+
 A **generate_dot** function is also included and can be used added by the user in the main function by using the argument -d.
 
 ### Main Function

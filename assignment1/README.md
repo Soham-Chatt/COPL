@@ -47,6 +47,7 @@ This is a C++ program that implements a parser for lambda calculus expressions. 
 - **parse_expression**: Parses an expression or a series of applications.
 - **parse_atom**: Parses an atom (variable, lambda, or bracket-enclosed expression).
 - **parse_lambda**: Parses a lambda expression from the input.
+
 A **generate_dot** function is also included and can be used added by the user in the main function
 but isn't used in the program. This is because we would otherwise have to use arguments which was not allowed for this assignment yet.
 
