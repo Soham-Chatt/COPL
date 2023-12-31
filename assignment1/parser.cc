@@ -105,7 +105,7 @@ std::string ApplicationNode::to_string() const {
   return "(" + left->to_string() + " " + right->to_string() + ")";
 }
 
-std::string Parser::generate_dot(const Node *node) {
+std::string Parser::generate_dot(const Node* node) {
   static int counter = 0;
   std::ostringstream out;
   if (!node) return "";

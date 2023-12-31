@@ -47,6 +47,8 @@ class Parser {
 public:
   std::unique_ptr<Node> parse(const std::string &input_str);
 
+  std::string generate_dot(const Node* node);
+
 private:
   std::string input;
   size_t pos = 0;
@@ -63,7 +65,6 @@ private:
 
   std::unique_ptr<Node> parse_lambda();
 
-  std::string generate_dot(const Node *node);
 };
 
 
